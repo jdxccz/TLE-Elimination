@@ -31,4 +31,12 @@ We will design some bonus props to reduce the complexity of the game. So that th
 ## Difficulty Levels: 
 A higher level of the game will come with smaller container size (small S) and more layers of pictures. These parameters may also be customized by the player. 
 
+## Build
 
+cabal update
+cabal install --only-dependencies
+cabal build
+cabal install
+
+## Run
+cabal run
