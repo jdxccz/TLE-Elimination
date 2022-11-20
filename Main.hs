@@ -52,6 +52,7 @@ data Stack = Stack { full :: Bool
 
 type Board = [Coord]
 -- type Colors  = [Int]
+type MBoard = [[Coord]]
 
 -- the next block to be move from board to stack 
 type ToMove =  Coord 
@@ -60,7 +61,7 @@ data World = World { nextMove :: ToMove
                    , wMousePos:: Point
                    , mouseGridPos:: (Int, Int)
                    , stack :: Stack
-                   , board :: Board
+                   , board :: MBoard
                    , score :: Int
                    , random :: Random.StdGen
                    , status :: Int
@@ -70,6 +71,9 @@ data World = World { nextMove :: ToMove
 
 boardNumber :: Int
 boardNumber = 9
+
+boardHeight :: Int
+boardHeight = 3
 
 size :: Float
 size = 400.0
@@ -123,9 +127,12 @@ drawBlock (x, y, givencolor) =
       | givencolor == 100 = black
       | otherwise = violet
 
+getFirst :: [[Coord]] -> [Coord]
+getFirst [] = []
+getFirst (x:xs) = x!!0:getFirst xs
 
-drawBoard :: [Coord] -> [Picture]
-drawBoard coords = map drawBlock (coords)
+drawBoard :: [[Coord]] -> [Picture]
+drawBoard coords = map drawBlock (getFirst coords)
 
 drawStack :: [Coord] -> [Picture]
 drawStack colors = map drawBlock (colors)
@@ -183,7 +190,7 @@ onMouseMove :: Point -> World -> World -- point = (float, float)
 onMouseMove p g = g { wMousePos = p }
 
 onMouseDown :: World -> World
-onMouseDown g = case validPlacementCoord mouseGridPos (board g) of
+onMouseDown g = case validPlacementCoord mouseGridPos (getFirst (board g)) of
     -- False -> g {mouseEnter = True}
     -- True -> g {mouseEnter = True}
     False -> g {mouseEnter = True,  mouseGridPos = mouseGridPos }-- , status = 1}--  {showtext = "sth wrong"} --, status = 1
@@ -212,18 +219,25 @@ updateContent :: Board -> Int -> Board
 updateContent [] state = []
 updateContent ((x, y, c):xs) state = (state, y, c):(updateContent xs (state + 1))
 
-deleteItem :: (Int, Int) -> Board -> Board
+deleteItem :: (Int, Int) -> MBoard -> MBoard
 deleteItem _ [] = []
-deleteItem pos ((x, y, z): theboard) = if pos == (x, y) then ((x, y, 100): theboard) else (x, y, z) : deleteItem pos theboard
+deleteItem pos (boardelement: theboard) = if pos /= (x, y) then boardelement : deleteItem pos theboard
+                                          else if length(boardelement) == 1 then ([(x, y, 100)]: theboard) 
+                                          else (drop 1 boardelement) : theboard
+  where
+    (x,y,z) = boardelement !! 0
+    
 
 addItem :: Int -> Board -> Board
 addItem 0 xs = xs
 addItem c xs = xs ++ [((length xs), 0, c)]
 
 
-findColor :: (Int, Int) -> Board -> Int
+findColor :: (Int, Int) -> MBoard -> Int
 findColor _ [] = 0 
-findColor pos ((x, y, c): theboard) = if pos == (x, y) then c else findColor pos theboard
+findColor pos (boardelement: theboard) = if pos == (x, y) then z else findColor pos theboard
+  where
+    (x,y,z) = boardelement !! 0
 
 
 
@@ -261,20 +275,29 @@ main = do
 
 
 
-initBoard :: Random.StdGen -> Int -> Board
-initBoard ran boardNum = coloredboard
-      where initboard = [(i,j) | i <- [1.. boardNum], j <- [1.. boardNum]]
+initBoard :: Random.StdGen -> Int -> MBoard
+initBoard ran boardNum = formboard coloredboard
+      where initboard0 = [(i,j) | i <- [1.. boardNum], j <- [1.. boardNum]]
             pureGen = mkStdGen 137
             rolls n =  take n . unfoldr (Just . uniformR (1, 5))
-            initcolors0 = rolls 27 pureGen
+            initcolors0 = rolls (boardNum * boardNum) pureGen
             initcolors1 = initcolors0 ++ initcolors0 ++ initcolors0
-            initcolors = shuffle' initcolors1 (boardNum * boardNum) pureGen
+            initcolors = shuffle' initcolors1 (boardNum * boardNum * boardHeight) pureGen
+            initboard = tricopy initboard0
             -- addRandNum (x, y) = (x, y, head (rolls 1 pureGen ))
             -- coloredboard = map addRandNum initboard -- [(i,j,c) | (i,j) <- initboard, c <- initcolors]  -- [(x, y, color)]
             coloredboard = putToghther initboard initcolors
             -- convertListToTuple [x, y, z] = (x, y, z)
             -- convertListToTuple _ = (0, 0, 0)
             -- reformedboard = map convertListToTuple coloredboard
+
+formboard :: [Coord] -> [[Coord]]
+formboard (x:y:z:xs) = [x,y,z]:formboard xs
+formboard [] = []
+
+tricopy :: [(Int, Int)] -> [(Int, Int)]
+tricopy [] = []
+tricopy (x:xs) = [x,x,x] ++ tricopy xs
 
 putToghther :: [(Int, Int)] -> [Int] -> [Coord]
 putToghther [] _ = []
@@ -293,7 +316,7 @@ updateWorld n _ world
           newStack = if length (content (stack world )) == 7 then Stack True [] False 
                      else if (eliminate (stack world)) || (foundColor == 100) then Stack False (content (stack world )) False
                      else Stack False (addItem foundColor (content (stack world ))) False
-          newStatus = if score world == 78 && (eliminate (stack world)) then 2 else if full newStack || status world == 1  then  1 else 0
+          newStatus = if score world == (boardNumber * boardNumber * boardHeight - 3) && (eliminate (stack world)) then 2 else if full newStack || status world == 1  then  1 else 0
           newBoard = deleteItem deletePos (board world )
           newScore = if (eliminate (stack world)) then (score world) + 3 else (score world)
 
