@@ -21,6 +21,7 @@ import Graphics.Gloss.Interface.Pure.Game
 import System.Random
 import qualified System.Random as Random
 import System.Random (Random(..), newStdGen)
+import System.Random.Shuffle (shuffle')
 
 -- main:: IO ()
 -- main = putStr "Welcome to TLE World"
@@ -136,11 +137,15 @@ drawStack colors = map drawBlock (colors)
 drawWorld :: Int -> World -> Picture
 drawWorld squares world =
   case (status world) of
+    2 -> Translate (-size/2) (-size/2)
+      $ Color white
+      $ Scale 0.2 0.2
+      $ Text ("You WIN!! Score: " ++ (show (score world)))
     1 -> Translate (-size/2) (-size/2) -- 游戏结束
       $ Color white
       $ Scale 0.2 0.2
-     --  $ Text ("Score: " ++ (show (score world)))
-      $ Text ("mostpos: " ++ (show (mouseGridPos world)))
+      $ Text ("You LOSE!! Score: " ++ (show (score world)))
+      -- $ Text ("mostpos: " ++ (show (mouseGridPos world)))
     _ ->
       Translate (-size/2) (-size/2)
       $ pictures
@@ -175,7 +180,7 @@ onMouseDown :: World -> World
 onMouseDown g = case validPlacementCoord mouseGridPos (board g) of
     -- False -> g {mouseEnter = True}
     -- True -> g {mouseEnter = True}
-    False -> g {mouseEnter = True,  mouseGridPos = mouseGridPos , status = 1}--  {showtext = "sth wrong"} --, status = 1
+    False -> g {mouseEnter = True,  mouseGridPos = mouseGridPos }-- , status = 1}--  {showtext = "sth wrong"} --, status = 1
     True -> g { mouseEnter = True, mouseGridPos = mouseGridPos, stack = newStack }
 
     where
@@ -255,7 +260,9 @@ initBoard ran boardNum = coloredboard
       where initboard = [(i,j) | i <- [1.. boardNum], j <- [1.. boardNum]]
             pureGen = mkStdGen 137
             rolls n =  take n . unfoldr (Just . uniformR (1, 5))
-            initcolors = rolls (boardNum * boardNum) pureGen
+            initcolors0 = rolls 27 pureGen
+            initcolors1 = initcolors0 ++ initcolors0 ++ initcolors0
+            initcolors = shuffle' initcolors1 (boardNum * boardNum) pureGen
             -- addRandNum (x, y) = (x, y, head (rolls 1 pureGen ))
             -- coloredboard = map addRandNum initboard -- [(i,j,c) | (i,j) <- initboard, c <- initcolors]  -- [(x, y, color)]
             coloredboard = putToghther initboard initcolors
@@ -270,7 +277,7 @@ putToghther ((x,y):boards) (c:colors)  = (x, y, c) : (putToghther boards colors)
 
 updateWorld :: Int -> Float -> World -> World
 updateWorld n _ world 
-     | mouseEnter world == True  =  world { board = newBoard, stack = newStack, status = newStatus, mouseEnter = False, mouseGridPos = newmouseGridPos}
+     | mouseEnter world == True  =  world { score = newScore, board = newBoard, stack = newStack, status = newStatus, mouseEnter = False, mouseGridPos = newmouseGridPos}
      | otherwise = world
        where
           mouseScreenPos = wMousePos world 
@@ -278,8 +285,9 @@ updateWorld n _ world
           deletePos = newmouseGridPos  -- mouseGridPos
           foundColor = findColor deletePos  (board world )
           newStack = if length (content (stack world )) == 7 then Stack True [] False 
-                     else if eliminate (stack world) then Stack False (content (stack world )) False
+                     else if (eliminate (stack world)) || (foundColor == 100) then Stack False (content (stack world )) False
                      else Stack False (addItem foundColor (content (stack world ))) False
-          newStatus = if full newStack || status world == 1  then  1 else 0
+          newStatus = if score world == 78 && (eliminate (stack world)) then 2 else if full newStack || status world == 1  then  1 else 0
           newBoard = deleteItem deletePos (board world )
+          newScore = if (eliminate (stack world)) then (score world) + 3 else (score world)
 
