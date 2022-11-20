@@ -181,9 +181,10 @@ handleEvent e g = case e of
     _ -> g
 
 cleanStack :: World -> World
-cleanStack g = g {stack = newStack, score = newScore}
+cleanStack g = g {stack = newStack, score = newScore, status = newStatus}
   where
     newStack = Stack False [(0,0,0)] False
+    newStatus = if newScore == 243 then 2 else status g
     newScore = score g + (length (content (stack g))) - 1
 
 onMouseMove :: Point -> World -> World -- point = (float, float)
@@ -316,7 +317,7 @@ updateWorld n _ world
           newStack = if length (content (stack world )) == 7 then Stack True [] False 
                      else if (eliminate (stack world)) || (foundColor == 100) then Stack False (content (stack world )) False
                      else Stack False (addItem foundColor (content (stack world ))) False
-          newStatus = if score world == (boardNumber * boardNumber * boardHeight - 3) && (eliminate (stack world)) then 2 else if full newStack || status world == 1  then  1 else 0
+          newStatus = if score world == 240 && (eliminate (stack world)) then 2 else if full newStack || status world == 1  then  1 else 0
           newBoard = deleteItem deletePos (board world )
           newScore = if (eliminate (stack world)) then (score world) + 3 else (score world)
 
