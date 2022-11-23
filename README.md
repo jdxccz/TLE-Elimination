@@ -43,4 +43,5 @@ cabal run
 
 ## Contribution
 Hansong Chen: Build Stack Logic, Build Win Logic, Caculate Scores, Improve Stack Display 
+
 Xingkai Zheng: Build Muti-layer of Board, Build Revoke Logic, Build Shuffle Logic, Build Clear Stack Logic
