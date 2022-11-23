@@ -46,7 +46,8 @@ cabal run
 Updates: 
 The main architecture of our application includes: 
 
-*Data：
+Data：
+
 Board: a matrix with size MxN,
 
 Container: a vector with length S (use dictionary to store picture index),
@@ -55,7 +56,7 @@ Cursor  (row, col). The cursor will be on the current chosen picture,
 
 All the data is wrapped up into the data structure named world. 
 
-*Main Function:
+Main Function:
 
 1. initialization
 
