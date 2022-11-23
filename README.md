@@ -45,7 +45,7 @@ cabal run
 
 The main architecture of our application includes: 
 
-# Data：
+### Data：
 
 Board: a matrix with size MxN,
 
@@ -55,7 +55,7 @@ Cursor  (row, col). The cursor will be on the current chosen picture,
 
 All the data is wrapped up into the data structure named world. 
 
-# Main Function:
+### Main Function:
 
 1. initialization
 
@@ -68,7 +68,7 @@ Container Initialization: list of pictures have been selected;
 Get input from the user and use the imput to update board and container, check game status to see if fail or win. 
 
 
-# Other helper functions: 
+### Other helper functions: 
 
 1. Draw the blocks with uploaded pictures;
 
@@ -78,7 +78,7 @@ Get input from the user and use the imput to update board and container, check g
 
 4. different tools that the user can use: empty the container, revoke the last move, shuffle the board;
 
-# The challenges and solution: 
+### The challenges and solution: 
 
 1. handle mouse click: the position of mouse click should be mapped into the area of each block, and use boundaries of each block to justify whether a block is selected or not; 
 
