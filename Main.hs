@@ -180,7 +180,31 @@ handleEvent e g = case e of
     -- (EventMotion pos) -> onMouseMove pos g
     (EventKey (SpecialKey KeySpace) Down _ _) -> cleanStack g
     (EventKey (SpecialKey KeyLeft) Down _ _) -> undoLastMove g
+    (EventKey (SpecialKey KeyRight) Down _ _) -> shuffleboard g
     _ -> g
+
+shuffleboard :: World -> World
+shuffleboard g = g {board = newBoard, canUndoLast = False}
+  where newBoard = replace (shufflev (squeeze (board g))) (board g)
+
+squeeze :: MBoard -> Board
+squeeze [] = []
+squeeze (x:xs) = if z == 100 then squeeze xs else x ++ squeeze xs
+  where (t,y,z) =  x !! 0
+
+shufflev :: Board -> Board
+shufflev b = shuffle' b (length b) pureGen
+  where pureGen = mkStdGen 137
+
+replace :: Board -> MBoard -> MBoard
+replace _ [] = []
+replace bs (mb:mbs) = if z == 100 then mb: (replace bs mbs) else mb2 : (replace (drop (length mb) bs ) mbs)
+  where (x,y,z) =  mb !! 0
+        mb2 = replacev bs mb
+
+replacev :: Board -> Board -> Board
+replacev _ [] = []
+replacev ((x,y,z):bs) ((a,b,c):ts) = (a,b,z):(replacev bs ts)
 
 cleanStack :: World -> World
 cleanStack g = g {stack = newStack, score = newScore, status = newStatus, canUndoLast = False}
