@@ -41,7 +41,7 @@ import System.Random.Shuffle (shuffle')
 --     ballColor = dark red 
 --     paddleColor = light (light blue) 
 
-    
+
 type Coord = (Int, Int, Int)
 data Stack = Stack { full :: Bool
                    , content :: Board
@@ -55,7 +55,7 @@ type Board = [Coord]
 type MBoard = [[Coord]]
 
 -- the next block to be move from board to stack 
-type ToMove =  Coord 
+type ToMove =  Coord
 
 data World = World { nextMove :: ToMove
                    , wMousePos:: Point
@@ -67,6 +67,7 @@ data World = World { nextMove :: ToMove
                    , status :: Int
                    , showtext :: String
                    , mouseEnter ::Bool
+                   , canUndoLast :: Bool
                    } deriving (Show)
 
 boardNumber :: Int
@@ -82,10 +83,10 @@ boardSize :: Float
 boardSize = 40
 
 stackLength:: Int
-stackLength = 7 
+stackLength = 7
 
 -- 画边框
-drawGrid :: Int -> [Picture] -> [Picture]  
+drawGrid :: Int -> [Picture] -> [Picture]
 drawGrid squares grid = -- grid = [] initially 
   if l < (fromIntegral squares) + 1 then
     drawGrid squares (grid ++
@@ -95,7 +96,7 @@ drawGrid squares grid = -- grid = [] initially
     )
   else grid
   where l = (fromIntegral $ length grid)/2
-       
+
 
 -- drawStackBlock:: Coord -> Picture
 -- drawStackBlock (index, givencolor) =
@@ -118,11 +119,11 @@ drawBlock (x, y, givencolor) =
     s = boardSize
     x' = s * (fromIntegral x)
     y' = s * (fromIntegral y)
-    c 
-      | givencolor == 0 = white 
+    c
+      | givencolor == 0 = white
       | givencolor == 1 = yellow
       | givencolor == 2 = blue
-      | givencolor == 3 = green 
+      | givencolor == 3 = green
       | givencolor == 4 = red
       | givencolor == 100 = black
       | otherwise = violet
@@ -159,7 +160,7 @@ drawWorld squares world =
       $ (drawGrid squares [])
         ++ drawBoard (board world)
         ++ drawStack (content (stack world)) -- picture可以叠加
-       
+
 
 
 
@@ -177,25 +178,49 @@ handleEvent e g = case e of
     -- (EventKey (Char 'n') Down _ pos) -> (newGame (gmRandomSource g)) { gmMousePos = pos }
     (EventKey (MouseButton RightButton) Down _ pos) -> onMouseDown (onMouseMove pos g)
     -- (EventMotion pos) -> onMouseMove pos g
-    (EventKey (SpecialKey KeySpace) Down _ pos) -> cleanStack g
+    (EventKey (SpecialKey KeySpace) Down _ _) -> cleanStack g
+    (EventKey (SpecialKey KeyLeft) Down _ _) -> undoLastMove g
     _ -> g
 
 cleanStack :: World -> World
-cleanStack g = g {stack = newStack, score = newScore, status = newStatus}
+cleanStack g = g {stack = newStack, score = newScore, status = newStatus, canUndoLast = False}
   where
     newStack = Stack False [(0,0,0)] False
     newStatus = if newScore == (boardNumber * boardNumber * boardHeight) then 2 else status g
     newScore = score g + (length (content (stack g))) - 1
 
+undoLastMove :: World -> World
+undoLastMove g = case canUndoLast g of
+  False -> g
+  True -> g {board = newBoard, stack = newStack, canUndoLast = False}
+  where
+    newStack = Stack (full (stack g)) (removeLast (content (stack g))) (eliminate (stack g))
+    newBoard = putOnBoard (mouseGridPos g) (lastColor (content (stack g))) (board g)
+
+lastColor :: Board -> Int
+lastColor [] = 100
+lastColor [(_, _, c)] = c
+lastColor (x:xs) = lastColor xs
+
+removeLast :: Board -> Board
+removeLast [] = []
+removeLast [_] = []
+removeLast (x:xs) = x : removeLast xs
+
+putOnBoard :: (Int, Int) -> Int -> MBoard -> MBoard
+putOnBoard _ 100 b = b
+putOnBoard pos c (boardelement:theboard) = if pos == (x,y) then ((x,y,c):boardelement):theboard else boardelement:(putOnBoard pos c theboard)
+  where (x,y,z) = boardelement !! 0
+
 onMouseMove :: Point -> World -> World -- point = (float, float)
 onMouseMove p g = g { wMousePos = p }
 
 onMouseDown :: World -> World
-onMouseDown g = case validPlacementCoord mouseGridPos (getFirst (board g)) of
+onMouseDown g = case validPlacementCoord mouseGridPos (getFirst (board g)) && (findColor mouseGridPos (board g) /= 100) of
     -- False -> g {mouseEnter = True}
     -- True -> g {mouseEnter = True}
-    False -> g {mouseEnter = True,  mouseGridPos = mouseGridPos }-- , status = 1}--  {showtext = "sth wrong"} --, status = 1
-    True -> g { mouseEnter = True, mouseGridPos = mouseGridPos, stack = newStack }
+    False -> g {mouseEnter = False}-- , status = 1}--  {showtext = "sth wrong"} --, status = 1
+    True -> g { mouseEnter = True, mouseGridPos = mouseGridPos, stack = newStack, canUndoLast = newCanUndo }
 
     where
     mouseScreenPos = wMousePos g
@@ -204,7 +229,8 @@ onMouseDown g = case validPlacementCoord mouseGridPos (getFirst (board g)) of
     -- foundColor = findColor deletePos  (board g)
     nowColor = findColor mouseGridPos (board g)
     newStack = if countS nowColor (stack g) == 2 then deleteColor nowColor (stack g) else (stack g)
-    
+    newCanUndo = not (countS nowColor (stack g) == 2)
+
 countS :: Int -> Stack -> Int
 countS it (Stack _ [] _) = 0
 countS it (Stack first ((x, y, c):xs) third) = if it == c then (countS it (Stack first xs third)) + 1 else countS it (Stack first xs third)
@@ -223,11 +249,11 @@ updateContent ((x, y, c):xs) state = (state, y, c):(updateContent xs (state + 1)
 deleteItem :: (Int, Int) -> MBoard -> MBoard
 deleteItem _ [] = []
 deleteItem pos (boardelement: theboard) = if pos /= (x, y) then boardelement : deleteItem pos theboard
-                                          else if length(boardelement) == 1 then ([(x, y, 100)]: theboard) 
+                                          else if length(boardelement) == 1 then ([(x, y, 100)]: theboard)
                                           else (drop 1 boardelement) : theboard
   where
     (x,y,z) = boardelement !! 0
-    
+
 
 addItem :: Int -> Board -> Board
 addItem 0 xs = xs
@@ -235,7 +261,7 @@ addItem c xs = xs ++ [((length xs), 0, c)]
 
 
 findColor :: (Int, Int) -> MBoard -> Int
-findColor _ [] = 0 
+findColor _ [] = 0
 findColor pos (boardelement: theboard) = if pos == (x, y) then z else findColor pos theboard
   where
     (x,y,z) = boardelement !! 0
@@ -245,7 +271,7 @@ findColor pos (boardelement: theboard) = if pos == (x, y) then z else findColor 
 gridFromScreen :: Point -> (Int, Int)
 gridFromScreen (x, y) = (i, j)
     where
-    xScaled = (x + size /2) / (boardSize) 
+    xScaled = (x + size /2) / (boardSize)
     yScaled = (y+ size /2)/ (boardSize)  -- ç/ (boardSize)
     -- xScaled = if (x-10) / (boardSize*10)  < 9 && (x-10) / boardSize > 2 then (x-10) / boardSize else 3
     -- yScaled = if (y+890) / (boardSize*10) < 9 && (y+890) / boardSize > 2 then (y+890) / boardSize else 4 
@@ -255,7 +281,7 @@ gridFromScreen (x, y) = (i, j)
 
 
 validPlacementCoord :: (Int, Int) -> Board ->  Bool
-validPlacementCoord pos [] = False 
+validPlacementCoord pos [] = False
 validPlacementCoord pos ((x, y, z):board) = if pos == (x, y) then True else validPlacementCoord pos board
 
 main :: IO ()
@@ -264,7 +290,7 @@ main = do
   play (InWindow "TLE" (round size + 20, round size + 20) (10, 10)) 
     black
     9
-    (World (0,0,0) (0,0) (0,0) initstack initboard 0 ran 0 "" False)
+    (World (0,0,0) (0,0) (0,0) initstack initboard 0 ran 0 "" False False)
     (drawWorld squares)
     handleEvent  -- update world 
     (updateWorld squares)
@@ -306,18 +332,17 @@ putToghther _ [] = []
 putToghther ((x,y):boards) (c:colors)  = (x, y, c) : (putToghther boards colors)
 
 updateWorld :: Int -> Float -> World -> World
-updateWorld n _ world 
+updateWorld n _ world
      | mouseEnter world == True  =  world { score = newScore, board = newBoard, stack = newStack, status = newStatus, mouseEnter = False, mouseGridPos = newmouseGridPos}
      | otherwise = world
        where
-          mouseScreenPos = wMousePos world 
+          mouseScreenPos = wMousePos world
           newmouseGridPos = gridFromScreen mouseScreenPos  --  (Int, Int)
           deletePos = newmouseGridPos  -- mouseGridPos
           foundColor = findColor deletePos  (board world )
-          newStack = if length (content (stack world )) == 7 then Stack True [] False 
+          newStack = if length (content (stack world )) == 7 then Stack True [] False
                      else if (eliminate (stack world)) || (foundColor == 100) then Stack False (content (stack world )) False
                      else Stack False (addItem foundColor (content (stack world ))) False
           newStatus = if score world == (boardNumber * boardNumber * boardHeight - 3) && (eliminate (stack world)) then 2 else if full newStack || status world == 1  then  1 else 0
           newBoard = deleteItem deletePos (board world )
           newScore = if (eliminate (stack world)) then (score world) + 3 else (score world)
-
