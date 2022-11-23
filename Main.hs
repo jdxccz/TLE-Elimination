@@ -209,7 +209,14 @@ removeLast (x:xs) = x : removeLast xs
 
 putOnBoard :: (Int, Int) -> Int -> MBoard -> MBoard
 putOnBoard _ 100 b = b
-putOnBoard pos c (boardelement:theboard) = if pos == (x,y) then ((x,y,c):boardelement):theboard else boardelement:(putOnBoard pos c theboard)
+putOnBoard pos c (boardelement:theboard) = if pos /= (x,y) 
+  then 
+    boardelement:(putOnBoard pos c theboard) 
+  else if (z == 100) 
+    then 
+      [(x,y,c)]:theboard 
+    else 
+      ((x,y,c):boardelement):theboard
   where (x,y,z) = boardelement !! 0
 
 onMouseMove :: Point -> World -> World -- point = (float, float)
