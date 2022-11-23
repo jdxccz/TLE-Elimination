@@ -45,3 +45,7 @@ cabal run
 Hansong Chen: Build Stack Logic, Build Win Logic, Caculate Scores, Improve Stack Display 
 
 Xingkai Zheng: Build Muti-layer of Board, Build Revoke Logic, Build Shuffle Logic, Build Clear Stack Logic
+
+Hui Zhi: Desgin Model Architecture,vCo-Build Whole Module, Design and Display UI
+
+Xuechun Li: Co-Build Whole Module, Build User Input Handler and Click-Move Logic
