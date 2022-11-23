@@ -1,4 +1,4 @@
-# TLE Elimination Project Proposal
+# TLE Elimination Project (11.23 Updates)
 
 
 In this project, we will build an arcade game named TLE Elimination. 
@@ -29,71 +29,71 @@ We will design some bonus props to reduce the complexity of the game. So that th
 * Move: The last three pictures added to the container will be moved back to the picture.
 
 ## Difficulty Levels: 
-A higher level of the game will come with smaller container size (small S) and more layers of pictures. These parameters may also be customized by the player. 
+A higher level of the game will come with a smaller container size (small S) and more layers of pictures. These parameters may also be customized by the player. 
 
 ## Build
 
 cabal update
-cabal install --only-dependencies
-cabal build
-cabal install
+cabal install --only-dependencies //
+cabal build //
+cabal install 
 
 ## Run
 cabal run
 
-## updates
 
-The main architecture of our application includes: 
+## Updates: Main Architecture
 
 ### Data：
 
-Board: a matrix with size MxN,
+* Board: a matrix with size MxN,
 
-Container: a vector with length S (use dictionary to store picture index),
+* Container: a vector with length S (use dictionary to store picture index),
 
-Cursor  (row, col). The cursor will be on the current chosen picture,
+* Cursor  (row, col). The cursor will be on the current chosen picture,
 
-All the data is wrapped up into the data structure named world. 
+* World: a comprehensive data structure that includes all the game-related data.
 
-### Main Function:
+### Major Functions:
 
-1. initialization
+1. Game Initialization and Rendering
 
-Board Initialization :Load picture and fill in the entry with L layers, then return MxN board;
+* Board Initialization: Load pictures and fill in the board entry with L layers, then return an MxN board;
 
-Container Initialization: list of pictures have been selected;
+* Stack Initialization: allocate spaces for the empty stack
 
-2. interaction with user:
-
-Get input from the user and use the imput to update board and container, check game status to see if fail or win. 
+* IO Loading: load pictures from .png files with the gloss-juicy library
 
 
-### Other helper functions: 
+2. Interaction with the user:
 
-1. Draw the blocks with uploaded pictures;
+Get input from the user and use the input to update the board and container, and check the game status to see if fail or win. 
 
-2. handle events: including mouse click and keyboard input;
 
-3. find the clicked block and move it from board to container;
+### Other Helper Functions: 
 
-4. different tools that the user can use: empty the container, revoke the last move, shuffle the board;
+1. handle events: including mouse click and keyboard input;
 
-### The challenges and solution: 
+2. find the clicked block and move it from board to container;
 
-1. handle mouse click: the position of mouse click should be mapped into the area of each block, and use boundaries of each block to justify whether a block is selected or not; 
+3. different tools that the user can use: empty the container, revoke the last move, shuffle the board;
 
-2. handle shuffle: after shuffling all the pictures in the board, we should fill the shuffled pictures line by line into the board to keep its original shape. 
+### Challenges and Solutions: 
 
-# We made subtle changes to the goals: 
-Since searching the winning solution of this game will require enumeration of all the possible movement strategies, and the search space is exponential of the data volume, we decided not to check whether a certain board can be successfully eliminated. 
+1. handle mouse click: the position of the mouse click should be mapped into the area of each block, and use boundaries of each block to justify whether a block is selected or not; 
+
+2. handle shuffle: after shuffling all the pictures in the board, we should fill the shuffled pictures line by line into the board to keep their original shape. 
+
+### Changes to Goals: 
+Since searching for the winning solution of this game will require an enumeration of all the possible movement strategies, and the search space is exponential of the data volume, we decided not to check whether a certain board can be successfully eliminated. 
 
 
 
 ## Contribution
-Hansong Chen: Build Stack Logic, Build Win Logic, Caculate Scores, Improve Stack Display 
+Hansong Chen: build Stack logic, build win logic, calculate scores, improve Stack display 
 
-Xingkai Zheng: Build Muti-layer of Board, Build Revoke Logic, Build Shuffle Logic, Build Clear Stack Logic
+Xingkai Zheng: build multi-layer of the Board, build Revoke logic, build Shuffle logic, build and refine Stack logic
 
-Hui Zhi: Desgin Model Architecture,vCo-Build Whole Module, Design and Display UI
+Hui Zhi: design model architecture, Co-build the program structure and backbone, design and refine UI
 
-Xuechun Li: Co-Build Whole Module, Build User Input Handler and Click-Move Logic
+Xuechun Li: Co-build the program structure and backbone, build user input handler, and click-move logic
