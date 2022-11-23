@@ -46,7 +46,7 @@ cabal run
 Updates: 
 The main architecture of our application includes: 
 
-#Data：
+*Data：
 Board: a matrix with size MxN,
 
 Container: a vector with length S (use dictionary to store picture index),
@@ -55,7 +55,7 @@ Cursor  (row, col). The cursor will be on the current chosen picture,
 
 All the data is wrapped up into the data structure named world. 
 
-#Main Function:
+*Main Function:
 
 1. initialization
 
@@ -63,26 +63,26 @@ Board Initialization :Load picture and fill in the entry with L layers, then ret
 
 Container Initialization: list of pictures have been selected;
 
-2.interaction with user:
+2. interaction with user:
 
 Get input from the user and use the imput to update board and container, check game status to see if fail or win. 
 
 
 Other helper functions: 
 
-1.Draw the blocks with uploaded pictures;
+1. Draw the blocks with uploaded pictures;
 
-2.handle events: including mouse click and keyboard input;
+2. handle events: including mouse click and keyboard input;
 
-3.find the clicked block and move it from board to container;
+3. find the clicked block and move it from board to container;
 
-4.different tools that the user can use: empty the container, revoke the last move, shuffle the board;
+4. different tools that the user can use: empty the container, revoke the last move, shuffle the board;
 
 The challenges and solution: 
 
-1.handle mouse click: the position of mouse click should be mapped into the area of each block, and use boundaries of each block to justify whether a block is selected or not; 
+1. handle mouse click: the position of mouse click should be mapped into the area of each block, and use boundaries of each block to justify whether a block is selected or not; 
 
-2.handle shuffle: after shuffling all the pictures in the board, we should fill the shuffled pictures line by line into the board to keep its original shape. 
+2. handle shuffle: after shuffling all the pictures in the board, we should fill the shuffled pictures line by line into the board to keep its original shape. 
 
 We made subtle changes to the goals: 
 Since searching the winning solution of this game will require enumeration of all the possible movement strategies, and the search space is exponential of the data volume, we decided not to check whether a certain board can be successfully eliminated. 
