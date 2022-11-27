@@ -14,10 +14,10 @@ executable tlelimination
   ghc-options:       -Wall -O2 -threaded
   build-depends:     base >= 4.7
                      , random >= 1.1
-                     , gloss >= 1.9.2.1
                      , hspec >= 2.2
                      , QuickCheck >= 2.5.1
                      , random-shuffle == 0.0.4
+                     , gloss-juicy >= 0.1.2
                      , gloss==1.13.2.2, random==1.2.1.1, containers==0.6.5.1,set-extra==1.4.1
 
   default-language:  Haskell2010
