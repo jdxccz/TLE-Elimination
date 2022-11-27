@@ -125,7 +125,7 @@ drawBlock (x, y, givencolor) =
       | givencolor == 2 = blue
       | givencolor == 3 = green
       | givencolor == 4 = red
-      | givencolor == 100 = black
+      | givencolor == 100 = white
       | otherwise = violet
 
 getFirst :: [[Coord]] -> [Coord]
@@ -146,19 +146,19 @@ drawWorld :: Int -> World -> Picture
 drawWorld squares world =
   case (status world) of
     2 -> Translate (-size/2) (-size/2)
-      $ Color white
+      $ Color black
       $ Scale 0.2 0.2
       $ Text ("You WIN!! Score: " ++ (show (score world)))
     1 -> Translate (-size/2) (-size/2) -- 游戏结束
-      $ Color white
+      $ Color black
       $ Scale 0.2 0.2
       $ Text ("You LOSE!! Score: " ++ (show (score world)))
-      -- $ Text ("mostpos: " ++ (show (mouseGridPos world)))
+      --  Text ("mostpos: " ++ (show (mouseGridPos world)))
     _ ->
       Translate (-size/2) (-size/2)
       $ pictures
-      $ (drawGrid squares [])
-        ++ drawBoard (board world)
+      $ -- (drawGrid squares []) ++
+        drawBoard (board world)
         ++ drawStack (content (stack world)) -- picture可以叠加
 
 
@@ -319,7 +319,7 @@ main :: IO ()
 main = do
   ran <- Random.getStdGen
   play (InWindow "TLE" (round size + 20, round size + 20) (10, 10)) 
-    black
+    white
     9
     (World (0,0,0) (0,0) (0,0) initstack initboard 0 ran 0 "" False False)
     (drawWorld squares)
@@ -335,7 +335,7 @@ main = do
 
 initBoard :: Random.StdGen -> Int -> MBoard
 initBoard ran boardNum = formboard coloredboard
-      where initboard0 = [(i,j) | i <- [1.. boardNum], j <- [1.. boardNum]]
+      where initboard0 = [(i,j) | i <- [2.. boardNum], j <- [2.. boardNum]]
             pureGen = mkStdGen 137
             rolls n =  take n . unfoldr (Just . uniformR (1, 5))
             initcolors0 = rolls (boardNum * boardNum) pureGen
