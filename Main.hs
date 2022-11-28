@@ -1,11 +1,3 @@
--- module Main where
-
--- import Graphics.Gloss
-
--- main:: IO ()
--- main = putStr "Welcome to TLE World"
-
-
 -- {-# LANGUAGE FlexibleContexts #-}
 -- {-# LANGUAGE LambdaCase #-}
 -- {-# LANGUAGE TemplateHaskell #-}
@@ -17,29 +9,12 @@ import Data.Set (Set)
 import qualified Data.Set.Extra as Set
 import Data.List as L
 import Graphics.Gloss.Interface.Pure.Game
--- import Data.Monoid
 import System.Random
 import qualified System.Random as Random
+import Graphics.Gloss.Juicy
 import System.Random (Random(..), newStdGen)
 import System.Random.Shuffle (shuffle')
-
--- main:: IO ()
--- main = putStr "Welcome to TLE World"
-
--- window :: Display
--- window = InWindow "Nice Window" (900, 900) (10, 10)
-
--- background :: Color
--- background = black
-
--- drawing :: Picture
--- drawing = pictures
---   [ color ballColor $ circleSolid 30
---   , color paddleColor $ rectangleSolid 10 50
---   ]
---   where
---     ballColor = dark red 
---     paddleColor = light (light blue) 
+import Control.Concurrent.ParallelIO.Global
 
 
 type Coord = (Int, Int, Int)
@@ -48,10 +23,7 @@ data Stack = Stack { full :: Bool
                    , eliminate :: Bool
                    } deriving (Eq, Show)
 
--- type Grid = [(Int, Int)]
-
 type Board = [Coord]
--- type Colors  = [Int]
 type MBoard = [[Coord]]
 
 -- the next block to be move from board to stack 
@@ -68,55 +40,44 @@ data World = World { nextMove :: ToMove
                    , showtext :: String
                    , mouseEnter ::Bool
                    , canUndoLast :: Bool
+                   , pics :: [Picture]
                    } deriving (Show)
 
-boardNumber :: Int
-boardNumber = 9
+-- Number of blocks per row/column on the game board
+blockNumber :: Int
+blockNumber = 9
 
-boardHeight :: Int
-boardHeight = 3
+-- Number of picture layers on the game board
+layers :: Int
+layers = 3
 
-size :: Float
-size = 400.0
+-- Side length of the game board
+boardSize :: Float 
+boardSize = 400.0
 
-boardSize :: Float
-boardSize = 40
+-- Side length of the picture blocks
+blockSize :: Float
+blockSize = 40
 
+-- Maximum capacity of the stack
 stackLength:: Int
 stackLength = 7
 
--- 画边框
-drawGrid :: Int -> [Picture] -> [Picture]
-drawGrid squares grid = -- grid = [] initially 
-  if l < (fromIntegral squares) + 1 then
-    drawGrid squares (grid ++
-      [ Color red $ Line [(boardSize*l, 0), (boardSize*l, size)] -- line? Picture type? 
-      , Color red $ Line [(0, boardSize*l), (size, boardSize*l)]
-      ]
-    )
-  else grid
-  where l = (fromIntegral $ length grid)/2
+
+backgroundColor :: Color
+backgroundColor = makeColorI 116 247 156 0
 
 
--- drawStackBlock:: Coord -> Picture
--- drawStackBlock (index, givencolor) =
---   Color c $ mconcat $ [polygon [(0, y), (0 + s, y), (0 + s, y + s), (0, y + s)] ]
---   where
---     s = boardSize
---     y = s * (fromIntegral index)
---     c 
---       | givencolor == 0 = white 
---       | givencolor == 1 = yellow
---       | givencolor == 2 = blue
---       | givencolor == 3 = green 
---       | givencolor == 4 = red
---       | otherwise = violet
+loadPicture :: Int -> IO (Maybe Picture)
+loadPicture i 
+    | i == 0 = loadJuicyPNG "./pics/0.png" 
+    | i == 1 = loadJuicyPNG "./pics/1.png"
 
 drawBlock :: Coord -> Picture
 drawBlock (x, y, givencolor) =
-   Color c $ mconcat [ polygon [(x', y'), (x' + s, y'), (x' + s, y' + s), (x', y' + s)] ]
+   Color c $ polygon [(x', y'), (x' + s, y'), (x' + s, y' + s), (x', y' + s)]
   where
-    s = boardSize
+    s = blockSize
     x' = s * (fromIntegral x)
     y' = s * (fromIntegral y)
     c
@@ -128,55 +89,58 @@ drawBlock (x, y, givencolor) =
       | givencolor == 100 = white
       | otherwise = violet
 
+drawBlock2 :: [Picture] -> Coord  -> Picture
+drawBlock2 pics (x, y, 100)= Color backgroundColor $ polygon [(x', y'), (x' + s, y'), (x' + s, y' + s), (x', y' + s)]
+ where 
+    s = blockSize
+    x' = s * (fromIntegral x)
+    y' = s * (fromIntegral y)
+ 
+drawBlock2 pics (x, y, picsIndex)= Pictures [blockframe, pic]
+  where 
+    blockframe = Color black $ polygon [(x', y'), (x' + s, y'), (x' + s, y' + s), (x', y' + s)] 
+    pic = Translate (x'+s/2) (y'+s/2) $ Scale 0.12 0.12 $ pics!!picsIndex
+    -- | otherwise = Color backgroundColor $ polygon [(x', y'), (x' + s, y'), (x' + s, y' + s), (x', y' + s)]  
+    s = blockSize
+    x' = s * (fromIntegral x)
+    y' = s * (fromIntegral y)
+
+
 getFirst :: [[Coord]] -> [Coord]
 getFirst [] = []
 getFirst (x:xs) = x!!0:getFirst xs
 
-drawBoard :: [[Coord]] -> [Picture]
-drawBoard coords = map drawBlock (getFirst coords)
+drawBoard :: [[Coord]] -> [Picture] -> [Picture]
+drawBoard coords pics = map (drawBlock2 pics) (getFirst coords)
 
-drawStack :: [Coord] -> [Picture]
-drawStack colors = map drawBlock (colors)
+drawStack :: [Coord]  -> [Picture] -> [Picture]
+drawStack colors pics  = map (drawBlock2 pics) (colors)
 
--- getRandom :: Random.RandomGen g => g -> Int -> (Int, g)
--- getRandom gen len = Random.randomR (0, len) gen 
 
 
 drawWorld :: Int -> World -> Picture
-drawWorld squares world =
+drawWorld _ world =
   case (status world) of
-    2 -> Translate (-size/2) (-size/2)
+    2 -> Translate (-boardSize/2) (-boardSize/2)
       $ Color black
       $ Scale 0.2 0.2
       $ Text ("You WIN!! Score: " ++ (show (score world)))
-    1 -> Translate (-size/2) (-size/2) -- 游戏结束
+    1 -> Translate (-boardSize/2) (-boardSize/2) -- 游戏结束
       $ Color black
       $ Scale 0.2 0.2
       $ Text ("You LOSE!! Score: " ++ (show (score world)))
       --  Text ("mostpos: " ++ (show (mouseGridPos world)))
     _ ->
-      Translate (-size/2) (-size/2)
+      Translate (-boardSize/2) (-boardSize/2)
       $ pictures
-      $ -- (drawGrid squares []) ++
-        drawBoard (board world)
-        ++ drawStack (content (stack world)) -- picture可以叠加
-
-
+      $ drawBoard (board world) (pics world)
+        ++ drawStack (content (stack world)) (pics world) -- picture可以叠加
 
 
 handleEvent :: Event -> World -> World
--- handleEvent (EventKey (SpecialKey KeyDown) Down _ _) world =
---   world { stack = Stack False [(0,0,0)], board}
--- handleEvent (EventKey (SpecialKey KeyUp) Down _ _) world =
---   world { stack = Stack False [(0,0,0)]}
--- handleEvent (EventKey (SpecialKey KeyLeft) Down _ _) world =
---   world { stack = Stack False [(0,0,0)]}
--- handleEvent (EventKey (SpecialKey KeyRight) Down _ _) world =
---   world {stack = Stack False [(0,0,0)] }
--- handleEvent _ world = world
 handleEvent e g = case e of
     -- (EventKey (Char 'n') Down _ pos) -> (newGame (gmRandomSource g)) { gmMousePos = pos }
-    (EventKey (MouseButton RightButton) Down _ pos) -> onMouseDown (onMouseMove pos g)
+    (EventKey (MouseButton LeftButton) Down _ pos) -> onMouseDown (onMouseMove pos g)
     -- (EventMotion pos) -> onMouseMove pos g
     (EventKey (SpecialKey KeySpace) Down _ _) -> cleanStack g
     (EventKey (SpecialKey KeyLeft) Down _ _) -> undoLastMove g
@@ -210,7 +174,7 @@ cleanStack :: World -> World
 cleanStack g = g {stack = newStack, score = newScore, status = newStatus, canUndoLast = False}
   where
     newStack = Stack False [(0,0,0)] False
-    newStatus = if newScore == (boardNumber * boardNumber * boardHeight) then 2 else status g
+    newStatus = if newScore == (blockNumber * blockNumber * layers) then 2 else status g
     newScore = score g + (length (content (stack g))) - 1
 
 undoLastMove :: World -> World
@@ -302,10 +266,10 @@ findColor pos (boardelement: theboard) = if pos == (x, y) then z else findColor 
 gridFromScreen :: Point -> (Int, Int)
 gridFromScreen (x, y) = (i, j)
     where
-    xScaled = (x + size /2) / (boardSize)
-    yScaled = (y+ size /2)/ (boardSize)  -- ç/ (boardSize)
-    -- xScaled = if (x-10) / (boardSize*10)  < 9 && (x-10) / boardSize > 2 then (x-10) / boardSize else 3
-    -- yScaled = if (y+890) / (boardSize*10) < 9 && (y+890) / boardSize > 2 then (y+890) / boardSize else 4 
+    xScaled = (x + boardSize /2) / (blockSize)
+    yScaled = (y+ boardSize /2)/ (blockSize)  -- ç/ (blockSize)
+    -- xScaled = if (x-10) / (blockSize*10)  < 9 && (x-10) / blockSize > 2 then (x-10) / blockSize else 3
+    -- yScaled = if (y+890) / (blockSize*10) < 9 && (y+890) / blockSize > 2 then (y+890) / blockSize else 4 
     i = fromIntegral (floor (xScaled ))
     j = fromIntegral (floor (yScaled ))
 
@@ -315,39 +279,18 @@ validPlacementCoord :: (Int, Int) -> Board ->  Bool
 validPlacementCoord pos [] = False
 validPlacementCoord pos ((x, y, z):board) = if pos == (x, y) then True else validPlacementCoord pos board
 
-main :: IO ()
-main = do
-  ran <- Random.getStdGen
-  play (InWindow "TLE" (round size + 20, round size + 20) (10, 10)) 
-    white
-    9
-    (World (0,0,0) (0,0) (0,0) initstack initboard 0 ran 0 "" False False)
-    (drawWorld squares)
-    handleEvent  -- update world 
-    (updateWorld squares)
-  where
-    initstack = Stack False [(0,0,0)] False
-    squares = round (size/boardSize)
-    pureGen = mkStdGen 137
-    initboard = initBoard pureGen boardNumber
-
-
-
 initBoard :: Random.StdGen -> Int -> MBoard
-initBoard ran boardNum = formboard coloredboard
-      where initboard0 = [(i,j) | i <- [2.. boardNum], j <- [2.. boardNum]]
-            pureGen = mkStdGen 137
-            rolls n =  take n . unfoldr (Just . uniformR (1, 5))
-            initcolors0 = rolls (boardNum * boardNum) pureGen
+initBoard pureGen blockNum = formboard coloredboard
+      where initboard0 = [(i,j) | i <- [2.. blockNum], j <- [2.. blockNum]]
+            rolls n =  take n . unfoldr (Just . uniformR (1, 11))
+            initcolors0 = rolls (blockNum * blockNum) pureGen
             initcolors1 = initcolors0 ++ initcolors0 ++ initcolors0
-            initcolors = shuffle' initcolors1 (boardNum * boardNum * boardHeight) pureGen
+            initcolors = shuffle' initcolors1 (blockNum * blockNum * layers) pureGen
             initboard = tricopy initboard0
             -- addRandNum (x, y) = (x, y, head (rolls 1 pureGen ))
             -- coloredboard = map addRandNum initboard -- [(i,j,c) | (i,j) <- initboard, c <- initcolors]  -- [(x, y, color)]
             coloredboard = putToghther initboard initcolors
-            -- convertListToTuple [x, y, z] = (x, y, z)
-            -- convertListToTuple _ = (0, 0, 0)
-            -- reformedboard = map convertListToTuple coloredboard
+
 
 formboard :: [Coord] -> [[Coord]]
 formboard (x:y:z:xs) = [x,y,z]:formboard xs
@@ -363,7 +306,7 @@ putToghther _ [] = []
 putToghther ((x,y):boards) (c:colors)  = (x, y, c) : (putToghther boards colors)
 
 updateWorld :: Int -> Float -> World -> World
-updateWorld n _ world
+updateWorld _ _ world
      | mouseEnter world == True  =  world { score = newScore, board = newBoard, stack = newStack, status = newStatus, mouseEnter = False, mouseGridPos = newmouseGridPos}
      | otherwise = world
        where
@@ -374,6 +317,46 @@ updateWorld n _ world
           newStack = if length (content (stack world )) == 7 then Stack True [] False
                      else if (eliminate (stack world)) || (foundColor == 100) then Stack False (content (stack world )) False
                      else Stack False (addItem foundColor (content (stack world ))) False
-          newStatus = if score world == (boardNumber * boardNumber * boardHeight - 3) && (eliminate (stack world)) then 2 else if full newStack || status world == 1  then  1 else 0
+          newStatus = if score world == (blockNumber * blockNumber * layers - 3) && (eliminate (stack world)) then 2 else if full newStack || status world == 1  then  1 else 0
           newBoard = deleteItem deletePos (board world )
           newScore = if (eliminate (stack world)) then (score world) + 3 else (score world)
+
+filepaths :: [String]
+filepaths = map (\a -> "pics/" ++ (show a) ++ ".png") [1..12] -- todo
+
+
+picIO :: String -> IO Picture
+picIO filepath =  do 
+          p <- loadJuicyPNG filepath
+          case p of
+            Just p -> return p
+
+loadpictures :: IO [Picture]
+loadpictures = parallel $ map picIO filepaths
+
+main :: IO ()
+main = do
+  ran <- Random.getStdGen
+  pics <- loadpictures
+  play (InWindow "TLE" (round boardSize + 20, round boardSize + 20) (10, 10)) 
+    backgroundColor
+    9
+    (World (0,0,0) (0,0) (0,0) initstack initboard 0 ran 0 "" False False pics)
+    (drawWorld 0)
+    handleEvent  -- update world 
+    (updateWorld 0)
+  where
+    initstack = Stack False [(0,0,0)] False
+    pureGen = mkStdGen 137
+    initboard = initBoard pureGen blockNumber
+
+
+window :: Display
+window = InWindow "try" (500, 500) (10, 10)
+
+
+
+-- main :: IO ()
+-- main = do 
+--     pics  <- loadpictures -- pics should be a list of picture here
+--     display window white (Scale 0.1 0.1 $ Translate 100 100 $ Pictures [pics!!0, Scale 0.1 0.1 $ Translate 100 100 $pics!!1] )
