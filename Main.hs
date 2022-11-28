@@ -65,13 +65,33 @@ stackLength = 7
 
 
 backgroundColor :: Color
-backgroundColor = makeColorI 116 247 156 0
+backgroundColor = makeColorI 154 232 125 255
 
+boardFrameColor :: Color 
+boardFrameColor =  makeColorI 207 160 91 255
 
-loadPicture :: Int -> IO (Maybe Picture)
-loadPicture i 
-    | i == 0 = loadJuicyPNG "./pics/0.png" 
-    | i == 1 = loadJuicyPNG "./pics/1.png"
+boardBackColor :: Color
+boardBackColor =  makeColorI 163 104 15 255
+
+stackColor :: Color
+stackColor = makeColorI 237 200 145 255
+
+bgFrameSize :: Float
+bgFrameSize = 300.0
+
+bgBackSize :: Float
+bgBackSize = 250.0
+
+drawBackGround :: [Picture]
+drawBackGround = map (Scale 0.8 0.8) [manual, title, boardBG]
+  where title = (Translate (-50) 650.0) $ (Scale 0.8 0.8) $ Color boardBackColor $ Text "TLE Elimination"
+        boardBG = (Translate 300.0 300.0) $ Pictures $ [ Color boardFrameColor $ polygon [(-bgFrameSize, -bgFrameSize), (-bgFrameSize, bgFrameSize), (bgFrameSize, bgFrameSize), (bgFrameSize, -bgFrameSize)]]
+                  ++ [Color boardBackColor $ polygon [(-bgBackSize, -bgBackSize), (-bgBackSize, bgBackSize), (bgBackSize, bgBackSize), (bgBackSize, -bgBackSize)]] 
+        stackBG = Color stackColor $ Pictures $ map drawSubCircle [1..5]
+        
+drawSubCircle :: Int -> Picture
+drawSubCircle a = Translate ((fromIntegral(a))*200.0) (100.0) $ ThickCircle 10.0 255.0
+
 
 drawBlock :: Coord -> Picture
 drawBlock (x, y, givencolor) =
@@ -90,21 +110,34 @@ drawBlock (x, y, givencolor) =
       | otherwise = violet
 
 drawBlock2 :: [Picture] -> Coord  -> Picture
-drawBlock2 pics (x, y, 100)= Color backgroundColor $ polygon [(x', y'), (x' + s, y'), (x' + s, y' + s), (x', y' + s)]
+drawBlock2 pics (x, y, 100)= Color boardBackColor $ polygon [(x', y'), (x' + s, y'), (x' + s, y' + s), (x', y' + s)]
  where 
     s = blockSize
     x' = s * (fromIntegral x)
     y' = s * (fromIntegral y)
  
-drawBlock2 pics (x, y, picsIndex)= Pictures [blockframe, pic]
+drawBlock2 pics (x, y, picsIndex)=  pic
   where 
     blockframe = Color black $ polygon [(x', y'), (x' + s, y'), (x' + s, y' + s), (x', y' + s)] 
-    pic = Translate (x'+s/2) (y'+s/2) $ Scale 0.12 0.12 $ pics!!picsIndex
-    -- | otherwise = Color backgroundColor $ polygon [(x', y'), (x' + s, y'), (x' + s, y' + s), (x', y' + s)]  
+    pic = Translate (x'+s/2) (y'+s/2) $ Scale 0.14 0.14 $ pics!!picsIndex
     s = blockSize
     x' = s * (fromIntegral x)
     y' = s * (fromIntegral y)
 
+manualblock :: Picture
+manualblock = Color white $ Polygon [(x-100, y), (x-100, y+750),(x+2000, y+750), (x+2000, y+0)]
+  where x = -400
+        y = 400
+
+manual :: Picture
+manual = Translate (-300) (0) $ Scale 0.15 0.15 $ Pictures [manualblock, t, t1, t2, t3]
+  where 
+    t = Translate x (600+y) $ Text "Props:"
+    t1 = Translate x (450+y) $ Text "Clear the stack: space"
+    t2 = Translate x (300+y) $ Text "Shuffle the board: right arrow" 
+    t3 = Translate x (150+y) $ Text "Shuffle the board: right arrow"  
+    x = -400 
+    y = 400 
 
 getFirst :: [[Coord]] -> [Coord]
 getFirst [] = []
@@ -114,7 +147,8 @@ drawBoard :: [[Coord]] -> [Picture] -> [Picture]
 drawBoard coords pics = map (drawBlock2 pics) (getFirst coords)
 
 drawStack :: [Coord]  -> [Picture] -> [Picture]
-drawStack colors pics  = map (drawBlock2 pics) (colors)
+drawStack colors pics  = (map (drawBlock2 pics) (colors))
+  -- where stackBG = Color black $ Pictures $ map drawSubCircle [1..5]
 
 
 
@@ -131,10 +165,11 @@ drawWorld _ world =
       $ Text ("You LOSE!! Score: " ++ (show (score world)))
       --  Text ("mostpos: " ++ (show (mouseGridPos world)))
     _ ->
-      Translate (-boardSize/2) (-boardSize/2)
+      Translate (-boardSize/2) (-boardSize/2) 
       $ pictures
-      $ drawBoard (board world) (pics world)
-        ++ drawStack (content (stack world)) (pics world) -- picture可以叠加
+      $ drawBackGround
+       ++ drawBoard (board world) (pics world)
+       ++ drawStack (content (stack world)) (pics world) -- picture可以叠加
 
 
 handleEvent :: Event -> World -> World
@@ -282,7 +317,7 @@ validPlacementCoord pos ((x, y, z):board) = if pos == (x, y) then True else vali
 initBoard :: Random.StdGen -> Int -> MBoard
 initBoard pureGen blockNum = formboard coloredboard
       where initboard0 = [(i,j) | i <- [2.. blockNum], j <- [2.. blockNum]]
-            rolls n =  take n . unfoldr (Just . uniformR (1, 11))
+            rolls n =  take n . unfoldr (Just . uniformR (1, 12))
             initcolors0 = rolls (blockNum * blockNum) pureGen
             initcolors1 = initcolors0 ++ initcolors0 ++ initcolors0
             initcolors = shuffle' initcolors1 (blockNum * blockNum * layers) pureGen
@@ -322,7 +357,7 @@ updateWorld _ _ world
           newScore = if (eliminate (stack world)) then (score world) + 3 else (score world)
 
 filepaths :: [String]
-filepaths = map (\a -> "pics/" ++ (show a) ++ ".png") [1..12] -- todo
+filepaths = map (\a -> "pics/" ++ (show a) ++ ".png") [1..13] -- todo
 
 
 picIO :: String -> IO Picture
@@ -338,7 +373,8 @@ main :: IO ()
 main = do
   ran <- Random.getStdGen
   pics <- loadpictures
-  play (InWindow "TLE" (round boardSize + 20, round boardSize + 20) (10, 10)) 
+  play --FullScreen
+   (InWindow "TLE" (800, 800) (10, 10)) 
     backgroundColor
     9
     (World (0,0,0) (0,0) (0,0) initstack initboard 0 ran 0 "" False False pics)
