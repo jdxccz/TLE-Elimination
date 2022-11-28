@@ -125,9 +125,9 @@ drawBlock2 pics (x, y, picsIndex)=  pic
     y' = s * (fromIntegral y)
 
 manualblock :: Picture
-manualblock = Color white $ Polygon [(x-100, y), (x-100, y+750),(x+2000, y+750), (x+2000, y+0)]
+manualblock = Color white $ Polygon [(x-100, y), (x-100, y+750),(x+2300, y+750), (x+2300, y+0)]
   where x = -400
-        y = 400
+        y = 450
 
 manual :: Picture
 manual = Translate (-300) (0) $ Scale 0.15 0.15 $ Pictures [manualblock, t, t1, t2, t3]
@@ -135,9 +135,9 @@ manual = Translate (-300) (0) $ Scale 0.15 0.15 $ Pictures [manualblock, t, t1, 
     t = Translate x (600+y) $ Text "Props:"
     t1 = Translate x (450+y) $ Text "Clear the stack: space"
     t2 = Translate x (300+y) $ Text "Shuffle the board: right arrow" 
-    t3 = Translate x (150+y) $ Text "Shuffle the board: right arrow"  
+    t3 = Translate x (150+y) $ Text "Revoke the last move: left arrow"  
     x = -400 
-    y = 400 
+    y = 400
 
 getFirst :: [[Coord]] -> [Coord]
 getFirst [] = []
