@@ -375,7 +375,7 @@ main = do
   ran <- Random.getStdGen
   pics <- loadpictures
   play --FullScreen
-   (InWindow "TLE" (1100, 800) (10, 10)) 
+   (InWindow "TLE" (1400, 1000) (10, 10)) 
     backgroundColor
     9
     (World (0,0,0) (0,0) (0,0) initstack initboard 0 ran 0 "" False False pics)
