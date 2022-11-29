@@ -85,7 +85,7 @@ bgBackSize = 250.0
 drawBackGround :: [Picture]
 drawBackGround = map (Scale 0.8 0.8) [manual, title, boardBG]
   where title = (Translate (-50) 650.0) $ (Scale 0.8 0.8) $ Color boardBackColor $ Text "TLE Elimination"
-        boardBG = (Translate 300.0 300.0) $ Pictures $ [ Color boardFrameColor $ polygon [(-bgFrameSize, -bgFrameSize), (-bgFrameSize, bgFrameSize), (bgFrameSize, bgFrameSize), (bgFrameSize, -bgFrameSize)]]
+        boardBG = (Translate 275.0 275.0) $ Pictures $ [ Color boardFrameColor $ polygon [(-bgFrameSize, -bgFrameSize), (-bgFrameSize, bgFrameSize), (bgFrameSize, bgFrameSize), (bgFrameSize, -bgFrameSize)]]
                   ++ [Color boardBackColor $ polygon [(-bgBackSize, -bgBackSize), (-bgBackSize, bgBackSize), (bgBackSize, bgBackSize), (bgBackSize, -bgBackSize)]] 
         stackBG = Color stackColor $ Pictures $ map drawSubCircle [1..5]
         
@@ -130,7 +130,7 @@ manualblock = Color white $ Polygon [(x-100, y), (x-100, y+750),(x+2300, y+750),
         y = 450
 
 manual :: Picture
-manual = Translate (-300) (0) $ Scale 0.15 0.15 $ Pictures [manualblock, t, t1, t2, t3]
+manual = Translate (-460) (0) $ Scale 0.15 0.15 $ Pictures [manualblock, t, t1, t2, t3]
   where 
     t = Translate x (600+y) $ Text "Props:"
     t1 = Translate x (450+y) $ Text "Clear the stack: space"
@@ -147,7 +147,7 @@ drawBoard :: [[Coord]] -> [Picture] -> [Picture]
 drawBoard coords pics = map (drawBlock2 pics) (getFirst coords)
 
 drawStack :: [Coord]  -> [Picture] -> [Picture]
-drawStack colors pics  = (map (drawBlock2 pics) (colors))
+drawStack colors pics  = [Translate (-20) (-20) $ mconcat (map (drawBlock2 pics) (colors))]
   -- where stackBG = Color black $ Pictures $ map drawSubCircle [1..5]
 
 
@@ -316,7 +316,7 @@ validPlacementCoord pos ((x, y, z):board) = if pos == (x, y) then True else vali
 
 initBoard :: Random.StdGen -> Int -> MBoard
 initBoard pureGen blockNum = formboard coloredboard
-      where initboard0 = [(i,j) | i <- [2.. blockNum], j <- [2.. blockNum]]
+      where initboard0 = [(i,j) | i <- [1.. blockNum], j <- [1.. blockNum]]
             rolls n =  take n . unfoldr (Just . uniformR (1, 12))
             initcolors0 = rolls (blockNum * blockNum) pureGen
             initcolors1 = initcolors0 ++ initcolors0 ++ initcolors0
@@ -357,7 +357,7 @@ updateWorld _ _ world
           newScore = if (eliminate (stack world)) then (score world) + 3 else (score world)
 
 filepaths :: [String]
-filepaths = map (\a -> "pics/" ++ (show a) ++ ".png") [1..13] -- todo
+filepaths = map (\a -> "pics/" ++ (show a) ++ ".PNG") [1..13] -- todo
 
 
 picIO :: String -> IO Picture
