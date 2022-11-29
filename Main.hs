@@ -53,7 +53,7 @@ layers = 3
 
 -- Side length of the game board
 boardSize :: Float 
-boardSize = 400.0
+boardSize = 500.0
 
 -- Side length of the picture blocks
 blockSize :: Float
@@ -375,7 +375,7 @@ main = do
   ran <- Random.getStdGen
   pics <- loadpictures
   play --FullScreen
-   (InWindow "TLE" (800, 800) (10, 10)) 
+   (InWindow "TLE" (1100, 800) (10, 10)) 
     backgroundColor
     9
     (World (0,0,0) (0,0) (0,0) initstack initboard 0 ran 0 "" False False pics)
