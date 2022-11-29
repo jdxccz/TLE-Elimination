@@ -130,7 +130,7 @@ manualblock = Color white $ Polygon [(x-100, y), (x-100, y+750),(x+2300, y+750),
         y = 450
 
 manual :: Picture
-manual = Translate (-460) (0) $ Scale 0.15 0.15 $ Pictures [manualblock, t, t1, t2, t3]
+manual = Translate (-430) (0) $ Scale 0.15 0.15 $ Pictures [manualblock, t, t1, t2, t3]
   where 
     t = Translate x (600+y) $ Text "Props:"
     t1 = Translate x (450+y) $ Text "Clear the stack: space"
@@ -147,8 +147,9 @@ drawBoard :: [[Coord]] -> [Picture] -> [Picture]
 drawBoard coords pics = map (drawBlock2 pics) (getFirst coords)
 
 drawStack :: [Coord]  -> [Picture] -> [Picture]
-drawStack colors pics  = [Translate (-20) (-20) $ mconcat (map (drawBlock2 pics) (colors))]
+drawStack colors pics  = [Translate (40) (-20) $ mconcat (map (drawBlock2 pics) (colors))] ++ [stacktail]
   -- where stackBG = Color black $ Pictures $ map drawSubCircle [1..5]
+  where stacktail = Translate (40) (-20) $ drawBlock2 pics (8, 0,13)
 
 
 
@@ -357,7 +358,7 @@ updateWorld _ _ world
           newScore = if (eliminate (stack world)) then (score world) + 3 else (score world)
 
 filepaths :: [String]
-filepaths = map (\a -> "pics/" ++ (show a) ++ ".PNG") [1..13] -- todo
+filepaths = map (\a -> "pics/" ++ (show a) ++ ".PNG") [1..14] -- todo
 
 
 picIO :: String -> IO Picture
