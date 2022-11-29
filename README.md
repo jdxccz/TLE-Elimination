@@ -41,6 +41,9 @@ cabal install
 ## Run
 cabal run
 
+## test 
+cabal test  --enable-tests   
+
 
 ## Updates: Main Architecture
 
