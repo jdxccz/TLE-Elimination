@@ -25,6 +25,33 @@ prop_getFirst xs = check out xs
                                    _  -> x == y!!0 && (check xxs ys ) 
             check _ _             = True 
 
+
+-- see if the length of blocks is the same 
+prop_shuffleboard1:: [Board] -> Bool 
+prop_shuffleboard1 b = length (squeeze out) == length (squeeze b)
+            where out =  shuffleboard b
+
+
+-- see if the shuffled color matches the original color 
+prop_shuffleboard2:: [[Coord]] -> Bool 
+prop_shuffleboard2 b = check2 outs  bs 
+            where out =  shuffleboard b
+                  outs = squeeze out
+                  bs   = squeeze b
+                  check2:: Board -> Board -> Bool
+                  check2 [] _       = True
+                  check2 (x:xs) ys  = xx `elem` yys  && check2 xs ys
+                      where (_, _, xx) = x
+                  yys = getlast bs
+                  getlast []       = []
+                  getlast (c:cs)   =  cc:getlast cs 
+                      where (_, _, cc) = c
+                  
+
+-- TODOs 
+
+
+
 main :: IO ()
 main =  hspec $ do
       describe "Prelude.head" $ do
@@ -36,6 +63,12 @@ main =  hspec $ do
       describe "get first" $ do
         it "properly get the first item" $ 
             property $ prop_getFirst
+      describe "shuffle board1" $ do
+        it "properly shuffles board, have the same number of blocks" $ 
+            property $ prop_shuffleboard1
+      describe "shuffle board2" $ do
+        it "properly shuffles board, have the same colors" $ 
+            property $ prop_shuffleboard2
       -- quickCheck (withMaxSuccess 10000 prop_reverseReverse)
       -- quickCheck prop
 

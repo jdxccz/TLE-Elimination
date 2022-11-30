@@ -1,5 +1,4 @@
 module Funcs where
-  
 import Graphics.Gloss
 import qualified Data.Set as Set
 import Data.Set (Set)
@@ -12,13 +11,22 @@ import Graphics.Gloss.Juicy
 import System.Random (Random(..), newStdGen)
 import System.Random.Shuffle (shuffle')
 import Control.Concurrent.ParallelIO.Global
-
+import Test.QuickCheck
 
 type Coord = (Int, Int, Int)
+
+
 data Stack = Stack { full :: Bool
                    , content :: Board
                    , eliminate :: Bool
                    } deriving (Eq, Show)
+
+instance Arbitrary Stack where
+   arbitrary = do
+     full1 <- arbitrary
+     content1 <- arbitrary
+     eliminate1 <- arbitrary
+     return $ Stack full1 content1 eliminate1
 
 type Board = [Coord]
 type MBoard = [[Coord]]
@@ -26,8 +34,8 @@ type MBoard = [[Coord]]
 -- the next block to be move from board to stack 
 type ToMove =  Coord
 
-data World = World { nextMove :: ToMove
-                   , wMousePos:: Point
+data World = World { -- nextMove :: ToMove
+                     wMousePos:: Point
                    , mouseGridPos:: (Int, Int)
                    , stack :: Stack
                    , board :: MBoard
@@ -39,6 +47,18 @@ data World = World { nextMove :: ToMove
                    , canUndoLast :: Bool
                    , pics :: [Picture]
                    } deriving (Show)
+
+
+-- init_ran = Random.getStdGen 137
+-- init_pics = []
+-- instance Arbitrary World where
+--    arbitrary = do
+--      point <- arbitrary
+--      mgrid <- arbitrary
+--      initstack1 <- arbitrary
+--      initboard1 <- arbitrary
+--      initscore1 <- arbitrary
+--      return $ (World point mgrid initstack1 initboard1 initscore1 init_ran  0 "" False False init_pics)
 
 -- Number of blocks per row/column on the game board
 blockNumber :: Int
@@ -177,17 +197,21 @@ handleEvent e g = case e of
     -- (EventMotion pos) -> onMouseMove pos g
     (EventKey (SpecialKey KeySpace) Down _ _) -> cleanStack g
     (EventKey (SpecialKey KeyLeft) Down _ _) -> undoLastMove g
-    (EventKey (SpecialKey KeyRight) Down _ _) -> shuffleboard g
+    (EventKey (SpecialKey KeyRight) Down _ _) -> World {board = shuffleboard (board g), canUndoLast= False}
     _ -> g
 
-shuffleboard :: World -> World
-shuffleboard g = g {board = newBoard, canUndoLast = False}
-  where newBoard = replace (shufflev (squeeze (board g))) (board g)
 
-squeeze :: MBoard -> Board
+shuffleboard :: [Board] -> [Board]
+shuffleboard g = newBoard
+  --g {board = newBoard, canUndoLast = False}
+  where newBoard = replace (shufflev (squeeze g)) g
+
+squeeze :: [[Coord]] -> [Coord]
 squeeze [] = []
 squeeze (x:xs) = if z == 100 then squeeze xs else x ++ squeeze xs
-  where (t,y,z) =  x !! 0
+  where (t,y,z) =  case x  of 
+                      [] -> (-1, -1, -1)
+                      _  -> x !! 0
 
 shufflev :: Board -> Board
 shufflev b = shuffle' b (length b) pureGen
@@ -196,7 +220,9 @@ shufflev b = shuffle' b (length b) pureGen
 replace :: Board -> MBoard -> MBoard
 replace _ [] = []
 replace bs (mb:mbs) = if z == 100 then mb: (replace bs mbs) else mb2 : (replace (drop (length mb) bs ) mbs)
-  where (x,y,z) =  mb !! 0
+  where (x,y,z) =  case mb  of 
+                      [] -> (-1, -1, -1)
+                      _  -> mb !! 0
         mb2 = replacev bs mb
 
 replacev :: Board -> Board -> Board
@@ -364,6 +390,7 @@ picIO filepath =  do
           case p of
             Just p -> return p
 
+
 loadpictures :: IO [Picture]
 loadpictures = parallel $ map picIO filepaths
 
@@ -375,7 +402,7 @@ loadpictures = parallel $ map picIO filepaths
 --    (InWindow "TLE" (1400, 1000) (10, 10)) 
 --     backgroundColor
 --     9
---     (World (0,0,0) (0,0) (0,0) initstack initboard 0 ran 0 "" False False pics)
+--     (World (0,0) (0,0) initstack initboard 0 ran 0 "" False False pics)
 --     (drawWorld 0)
 --     handleEvent  -- update world 
 --     (updateWorld 0)
