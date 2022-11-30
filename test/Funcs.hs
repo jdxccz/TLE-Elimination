@@ -21,6 +21,7 @@ data Stack = Stack { full :: Bool
                    , eliminate :: Bool
                    } deriving (Eq, Show)
 
+-- should initialize the type for stack if we want to randomly generate test cases of stacks 
 instance Arbitrary Stack where
    arbitrary = do
      full1 <- arbitrary

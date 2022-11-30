@@ -48,7 +48,7 @@ prop_shuffleboard2 b = check2 outs  bs
                       where (_, _, cc) = c
                   
 
--- TODOs 
+-- TODOs : more to test! 
 
 
 
