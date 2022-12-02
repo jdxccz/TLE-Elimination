@@ -44,6 +44,8 @@ cabal run
 ## test 
 cabal test  --enable-tests   
 
+cabal test  --enable-tests --test-option=--qc-max-size=500 to assign the number of tests
+
 
 ## Updates: Main Architecture
 
