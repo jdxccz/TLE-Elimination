@@ -11,6 +11,7 @@ cabal-version:       >= 1.10
 
 executable tlelimination
   main-is:           Main.hs
+  other-modules:     Funcs
   ghc-options:       -Wall -O2 -threaded
   build-depends:     base >= 4.7
                      , random >= 1.1
@@ -25,7 +26,7 @@ executable tlelimination
 
 test-suite test-testsuite
   type:              exitcode-stdio-1.0
-  hs-source-dirs:    test
+  hs-source-dirs:    MyTest
   main-is:           MyTest.hs
   other-modules:     Funcs
   ghc-options:       -Wall

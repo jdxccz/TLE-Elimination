@@ -3,7 +3,24 @@
 -- {-# LANGUAGE TemplateHaskell #-}
 -- {-# OPTIONS_GHC -Wno-deferred-out-of-scope-variables #-}
 module Main where
+import Funcs
 import Graphics.Gloss
+    ( black,
+      blue,
+      green,
+      red,
+      violet,
+      white,
+      yellow,
+      pictures,
+      polygon,
+      play,
+      makeColorI,
+      Display(InWindow),
+      Color,
+      Picture(Translate, ThickCircle, Polygon, Pictures, Color, Scale,
+              Text),
+      Point )
 import qualified Data.Set as Set
 import Data.Set (Set)
 import qualified Data.Set.Extra as Set
@@ -17,47 +34,47 @@ import System.Random.Shuffle (shuffle')
 import Control.Concurrent.ParallelIO.Global
 
 
-type Coord = (Int, Int, Int)
-data Stack = Stack { full :: Bool
-                   , content :: Board
-                   , eliminate :: Bool
-                   } deriving (Eq, Show)
+-- type Coord = (Int, Int, Int)
+-- data Stack = Stack { full :: Bool
+--                    , content :: Board
+--                    , eliminate :: Bool
+--                    } deriving (Eq, Show)
 
-type Board = [Coord]
-type MBoard = [[Coord]]
+-- type Board = [Coord]
+-- type MBoard = [[Coord]]
 
 -- the next block to be move from board to stack 
-type ToMove =  Coord
+-- type ToMove =  Coord
 
-data World = World { nextMove :: ToMove
-                   , wMousePos:: Point
-                   , mouseGridPos:: (Int, Int)
-                   , stack :: Stack
-                   , board :: MBoard
-                   , score :: Int
-                   , random :: Random.StdGen
-                   , status :: Int
-                   , showtext :: String
-                   , mouseEnter ::Bool
-                   , canUndoLast :: Bool
-                   , pics :: [Picture]
-                   } deriving (Show)
+-- data World = World { nextMove :: ToMove
+--                    , wMousePos:: Point
+--                    , mouseGridPos:: (Int, Int)
+--                    , stack :: Stack
+--                    , board :: MBoard
+--                    , score :: Int
+--                    , random :: Random.StdGen
+--                    , status :: Int
+--                    , showtext :: String
+--                    , mouseEnter ::Bool
+--                    , canUndoLast :: Bool
+--                    , pics :: [Picture]
+--                    } deriving (Show)
 
--- Number of blocks per row/column on the game board
-blockNumber :: Int
-blockNumber = 9
+-- -- Number of blocks per row/column on the game board
+-- blockNumber :: Int
+-- blockNumber = 9
 
--- Number of picture layers on the game board
-layers :: Int
-layers = 3
+-- -- Number of picture layers on the game board
+-- layers :: Int
+-- layers = 3
 
--- Side length of the game board
-boardSize :: Float 
-boardSize = 500.0
+-- -- Side length of the game board
+-- boardSize :: Float 
+-- boardSize = 500.0
 
--- Side length of the picture blocks
-blockSize :: Float
-blockSize = 40
+-- -- Side length of the picture blocks
+-- blockSize :: Float
+-- blockSize = 40
 
 -- Maximum capacity of the stack
 stackLength:: Int
@@ -139,9 +156,9 @@ manual = Translate (-430) (0) $ Scale 0.15 0.15 $ Pictures [manualblock, t, t1, 
     x = -400 
     y = 400
 
-getFirst :: [[Coord]] -> [Coord]
-getFirst [] = []
-getFirst (x:xs) = x!!0:getFirst xs
+-- getFirst :: [[Coord]] -> [Coord]
+-- getFirst [] = []
+-- getFirst (x:xs) = x!!0:getFirst xs
 
 drawBoard :: [[Coord]] -> [Picture] -> [Picture]
 drawBoard coords pics = map (drawBlock2 pics) (getFirst coords)
@@ -180,68 +197,68 @@ handleEvent e g = case e of
     -- (EventMotion pos) -> onMouseMove pos g
     (EventKey (SpecialKey KeySpace) Down _ _) -> cleanStack g
     (EventKey (SpecialKey KeyLeft) Down _ _) -> undoLastMove g
-    (EventKey (SpecialKey KeyRight) Down _ _) -> shuffleboard g
+    (EventKey (SpecialKey KeyRight) Down _ _) -> shuffleboard1 g
     _ -> g
 
-shuffleboard :: World -> World
-shuffleboard g = g {board = newBoard, canUndoLast = False}
+shuffleboard1 :: World -> World
+shuffleboard1 g = g {board = newBoard, canUndoLast = False}
   where newBoard = replace (shufflev (squeeze (board g))) (board g)
 
-squeeze :: MBoard -> Board
-squeeze [] = []
-squeeze (x:xs) = if z == 100 then squeeze xs else x ++ squeeze xs
-  where (t,y,z) =  x !! 0
+-- squeeze :: MBoard -> Board
+-- squeeze [] = []
+-- squeeze (x:xs) = if z == 100 then squeeze xs else x ++ squeeze xs
+--   where (t,y,z) =  x !! 0
 
-shufflev :: Board -> Board
-shufflev b = shuffle' b (length b) pureGen
-  where pureGen = mkStdGen 137
+-- shufflev :: Board -> Board
+-- shufflev b = shuffle' b (length b) pureGen
+--   where pureGen = mkStdGen 137
 
-replace :: Board -> MBoard -> MBoard
-replace _ [] = []
-replace bs (mb:mbs) = if z == 100 then mb: (replace bs mbs) else mb2 : (replace (drop (length mb) bs ) mbs)
-  where (x,y,z) =  mb !! 0
-        mb2 = replacev bs mb
+-- replace :: Board -> MBoard -> MBoard
+-- replace _ [] = []
+-- replace bs (mb:mbs) = if z == 100 then mb: (replace bs mbs) else mb2 : (replace (drop (length mb) bs ) mbs)
+--   where (x,y,z) =  mb !! 0
+--         mb2 = replacev bs mb
 
-replacev :: Board -> Board -> Board
-replacev _ [] = []
-replacev ((x,y,z):bs) ((a,b,c):ts) = (a,b,z):(replacev bs ts)
+-- replacev :: Board -> Board -> Board
+-- replacev _ [] = []
+-- replacev ((x,y,z):bs) ((a,b,c):ts) = (a,b,z):(replacev bs ts)
 
-cleanStack :: World -> World
-cleanStack g = g {stack = newStack, score = newScore, status = newStatus, canUndoLast = False}
-  where
-    newStack = Stack False [(0,0,0)] False
-    newStatus = if newScore == (blockNumber * blockNumber * layers) then 2 else status g
-    newScore = score g + (length (content (stack g))) - 1
+-- cleanStack :: World -> World
+-- cleanStack g = g {stack = newStack, score = newScore, status = newStatus, canUndoLast = False}
+--   where
+--     newStack = Stack False [(0,0,0)] False
+--     newStatus = if newScore == (blockNumber * blockNumber * layers) then 2 else status g
+--     newScore = score g + (length (content (stack g))) - 1
 
-undoLastMove :: World -> World
-undoLastMove g = case canUndoLast g of
-  False -> g
-  True -> g {board = newBoard, stack = newStack, canUndoLast = False}
-  where
-    newStack = Stack (full (stack g)) (removeLast (content (stack g))) (eliminate (stack g))
-    newBoard = putOnBoard (mouseGridPos g) (lastColor (content (stack g))) (board g)
+-- undoLastMove :: World -> World
+-- undoLastMove g = case canUndoLast g of
+--   False -> g
+--   True -> g {board = newBoard, stack = newStack, canUndoLast = False}
+--   where
+--     newStack = Stack (full (stack g)) (removeLast (content (stack g))) (eliminate (stack g))
+--     newBoard = putOnBoard (mouseGridPos g) (lastColor (content (stack g))) (board g)
 
-lastColor :: Board -> Int
-lastColor [] = 100
-lastColor [(_, _, c)] = c
-lastColor (x:xs) = lastColor xs
+-- lastColor :: Board -> Int
+-- lastColor [] = 100
+-- lastColor [(_, _, c)] = c
+-- lastColor (x:xs) = lastColor xs
 
-removeLast :: Board -> Board
-removeLast [] = []
-removeLast [_] = []
-removeLast (x:xs) = x : removeLast xs
+-- removeLast :: Board -> Board
+-- removeLast [] = []
+-- removeLast [_] = []
+-- removeLast (x:xs) = x : removeLast xs
 
-putOnBoard :: (Int, Int) -> Int -> MBoard -> MBoard
-putOnBoard _ 100 b = b
-putOnBoard pos c (boardelement:theboard) = if pos /= (x,y) 
-  then 
-    boardelement:(putOnBoard pos c theboard) 
-  else if (z == 100) 
-    then 
-      [(x,y,c)]:theboard 
-    else 
-      ((x,y,c):boardelement):theboard
-  where (x,y,z) = boardelement !! 0
+-- putOnBoard :: (Int, Int) -> Int -> MBoard -> MBoard
+-- putOnBoard _ 100 b = b
+-- putOnBoard pos c (boardelement:theboard) = if pos /= (x,y) 
+--   then 
+--     boardelement:(putOnBoard pos c theboard) 
+--   else if (z == 100) 
+--     then 
+--       [(x,y,c)]:theboard 
+--     else 
+--       ((x,y,c):boardelement):theboard
+--   where (x,y,z) = boardelement !! 0
 
 onMouseMove :: Point -> World -> World -- point = (float, float)
 onMouseMove p g = g { wMousePos = p }
@@ -262,58 +279,58 @@ onMouseDown g = case validPlacementCoord mouseGridPos (getFirst (board g)) && (f
     newStack = if countS nowColor (stack g) == 2 then deleteColor nowColor (stack g) else (stack g)
     newCanUndo = not (countS nowColor (stack g) == 2)
 
-countS :: Int -> Stack -> Int
-countS it (Stack _ [] _) = 0
-countS it (Stack first ((x, y, c):xs) third) = if it == c then (countS it (Stack first xs third)) + 1 else countS it (Stack first xs third)
+-- countS :: Int -> Stack -> Int
+-- countS it (Stack _ [] _) = 0
+-- countS it (Stack first ((x, y, c):xs) third) = if it == c then (countS it (Stack first xs third)) + 1 else countS it (Stack first xs third)
 
-deleteColor :: Int -> Stack -> Stack
-deleteColor nowColor (Stack full content eliminate) = Stack full (updateContent (deleteContent nowColor content) 0) True
+-- deleteColor :: Int -> Stack -> Stack
+-- deleteColor nowColor (Stack full content eliminate) = Stack full (updateContent (deleteContent nowColor content) 0) True
 
-deleteContent :: Int -> Board -> Board
-deleteContent nowColor [] = []
-deleteContent nowColor ((x, y, c):xs) = if c == nowColor then deleteContent nowColor xs else (x, y, c) : (deleteContent nowColor xs)
+-- deleteContent :: Int -> Board -> Board
+-- deleteContent nowColor [] = []
+-- deleteContent nowColor ((x, y, c):xs) = if c == nowColor then deleteContent nowColor xs else (x, y, c) : (deleteContent nowColor xs)
 
-updateContent :: Board -> Int -> Board
-updateContent [] state = []
-updateContent ((x, y, c):xs) state = (state, y, c):(updateContent xs (state + 1))
+-- updateContent :: Board -> Int -> Board
+-- updateContent [] state = []
+-- updateContent ((x, y, c):xs) state = (state, y, c):(updateContent xs (state + 1))
 
-deleteItem :: (Int, Int) -> MBoard -> MBoard
-deleteItem _ [] = []
-deleteItem pos (boardelement: theboard) = if pos /= (x, y) then boardelement : deleteItem pos theboard
-                                          else if length(boardelement) == 1 then ([(x, y, 100)]: theboard)
-                                          else (drop 1 boardelement) : theboard
-  where
-    (x,y,z) = boardelement !! 0
-
-
-addItem :: Int -> Board -> Board
-addItem 0 xs = xs
-addItem c xs = xs ++ [((length xs), 0, c)]
+-- deleteItem :: (Int, Int) -> MBoard -> MBoard
+-- deleteItem _ [] = []
+-- deleteItem pos (boardelement: theboard) = if pos /= (x, y) then boardelement : deleteItem pos theboard
+--                                           else if length(boardelement) == 1 then ([(x, y, 100)]: theboard)
+--                                           else (drop 1 boardelement) : theboard
+--   where
+--     (x,y,z) = boardelement !! 0
 
 
-findColor :: (Int, Int) -> MBoard -> Int
-findColor _ [] = 0
-findColor pos (boardelement: theboard) = if pos == (x, y) then z else findColor pos theboard
-  where
-    (x,y,z) = boardelement !! 0
+-- addItem :: Int -> Board -> Board
+-- addItem 0 xs = xs
+-- addItem c xs = xs ++ [((length xs), 0, c)]
 
 
-
-gridFromScreen :: Point -> (Int, Int)
-gridFromScreen (x, y) = (i, j)
-    where
-    xScaled = (x + boardSize /2) / (blockSize)
-    yScaled = (y+ boardSize /2)/ (blockSize)  -- ç/ (blockSize)
-    -- xScaled = if (x-10) / (blockSize*10)  < 9 && (x-10) / blockSize > 2 then (x-10) / blockSize else 3
-    -- yScaled = if (y+890) / (blockSize*10) < 9 && (y+890) / blockSize > 2 then (y+890) / blockSize else 4 
-    i = fromIntegral (floor (xScaled ))
-    j = fromIntegral (floor (yScaled ))
+-- findColor :: (Int, Int) -> MBoard -> Int
+-- findColor _ [] = 0
+-- findColor pos (boardelement: theboard) = if pos == (x, y) then z else findColor pos theboard
+--   where
+--     (x,y,z) = boardelement !! 0
 
 
 
-validPlacementCoord :: (Int, Int) -> Board ->  Bool
-validPlacementCoord pos [] = False
-validPlacementCoord pos ((x, y, z):board) = if pos == (x, y) then True else validPlacementCoord pos board
+-- gridFromScreen :: Point -> (Int, Int)
+-- gridFromScreen (x, y) = (i, j)
+--     where
+--     xScaled = (x + boardSize /2) / (blockSize)
+--     yScaled = (y+ boardSize /2)/ (blockSize)  -- ç/ (blockSize)
+--     -- xScaled = if (x-10) / (blockSize*10)  < 9 && (x-10) / blockSize > 2 then (x-10) / blockSize else 3
+--     -- yScaled = if (y+890) / (blockSize*10) < 9 && (y+890) / blockSize > 2 then (y+890) / blockSize else 4 
+--     i = fromIntegral (floor (xScaled ))
+--     j = fromIntegral (floor (yScaled ))
+
+
+
+-- validPlacementCoord :: (Int, Int) -> Board ->  Bool
+-- validPlacementCoord pos [] = False
+-- validPlacementCoord pos ((x, y, z):board) = if pos == (x, y) then True else validPlacementCoord pos board
 
 initBoard :: Random.StdGen -> Int -> MBoard
 initBoard pureGen blockNum = formboard coloredboard
@@ -328,18 +345,18 @@ initBoard pureGen blockNum = formboard coloredboard
             coloredboard = putToghther initboard initcolors
 
 
-formboard :: [Coord] -> [[Coord]]
-formboard (x:y:z:xs) = [x,y,z]:formboard xs
-formboard [] = []
+-- formboard :: [Coord] -> [[Coord]]
+-- formboard (x:y:z:xs) = [x,y,z]:formboard xs
+-- formboard [] = []
 
-tricopy :: [(Int, Int)] -> [(Int, Int)]
-tricopy [] = []
-tricopy (x:xs) = [x,x,x] ++ tricopy xs
+-- tricopy :: [(Int, Int)] -> [(Int, Int)]
+-- tricopy [] = []
+-- tricopy (x:xs) = [x,x,x] ++ tricopy xs
 
-putToghther :: [(Int, Int)] -> [Int] -> [Coord]
-putToghther [] _ = []
-putToghther _ [] = []
-putToghther ((x,y):boards) (c:colors)  = (x, y, c) : (putToghther boards colors)
+-- putToghther :: [(Int, Int)] -> [Int] -> [Coord]
+-- putToghther [] _ = []
+-- putToghther _ [] = []
+-- putToghther ((x,y):boards) (c:colors)  = (x, y, c) : (putToghther boards colors)
 
 updateWorld :: Int -> Float -> World -> World
 updateWorld _ _ world
@@ -378,7 +395,7 @@ main = do
    (InWindow "TLE" (1400, 1000) (10, 10)) 
     backgroundColor
     9
-    (World (0,0,0) (0,0) (0,0) initstack initboard 0 ran 0 "" False False pics)
+    (World (0,0) (0,0) initstack initboard 0 ran 0 "" False False pics)
     (drawWorld 0)
     handleEvent  -- update world 
     (updateWorld 0)
