@@ -4,26 +4,6 @@
 -- {-# OPTIONS_GHC -Wno-deferred-out-of-scope-variables #-}
 module Main where
 import Funcs
-import Graphics.Gloss
-    ( black,
-      blue,
-      green,
-      red,
-      violet,
-      white,
-      yellow,
-      pictures,
-      polygon,
-      play,
-      makeColorI,
-      Display(InWindow),
-      Color,
-      Picture(Translate, ThickCircle, Polygon, Pictures, Color, Scale,
-              Text),
-      Point )
-import qualified Data.Set as Set
-import Data.Set (Set)
-import qualified Data.Set.Extra as Set
 import Data.List as L
 import Graphics.Gloss.Interface.Pure.Game
 import System.Random
@@ -192,9 +172,7 @@ drawWorld _ world =
 
 handleEvent :: Event -> World -> World
 handleEvent e g = case e of
-    -- (EventKey (Char 'n') Down _ pos) -> (newGame (gmRandomSource g)) { gmMousePos = pos }
     (EventKey (MouseButton LeftButton) Down _ pos) -> onMouseDown (onMouseMove pos g)
-    -- (EventMotion pos) -> onMouseMove pos g
     (EventKey (SpecialKey KeySpace) Down _ _) -> cleanStack g
     (EventKey (SpecialKey KeyLeft) Down _ _) -> undoLastMove g
     (EventKey (SpecialKey KeyRight) Down _ _) -> shuffleboard1 g
@@ -265,16 +243,11 @@ onMouseMove p g = g { wMousePos = p }
 
 onMouseDown :: World -> World
 onMouseDown g = case validPlacementCoord mouseGridPos (getFirst (board g)) && (findColor mouseGridPos (board g) /= 100) of
-    -- False -> g {mouseEnter = True}
-    -- True -> g {mouseEnter = True}
-    False -> g {mouseEnter = False}-- , status = 1}--  {showtext = "sth wrong"} --, status = 1
+    False -> g {mouseEnter = False}
     True -> g { mouseEnter = True, mouseGridPos = mouseGridPos, stack = newStack, canUndoLast = newCanUndo }
-
     where
     mouseScreenPos = wMousePos g
     mouseGridPos = gridFromScreen mouseScreenPos  --  (Int, Int)
-    -- deletePos = (3, 3) -- mouseGridPos
-    -- foundColor = findColor deletePos  (board g)
     nowColor = findColor mouseGridPos (board g)
     newStack = if countS nowColor (stack g) == 2 then deleteColor nowColor (stack g) else (stack g)
     newCanUndo = not (countS nowColor (stack g) == 2)
@@ -340,8 +313,6 @@ initBoard pureGen blockNum = formboard coloredboard
             initcolors1 = initcolors0 ++ initcolors0 ++ initcolors0
             initcolors = shuffle' initcolors1 (blockNum * blockNum * layers) pureGen
             initboard = tricopy initboard0
-            -- addRandNum (x, y) = (x, y, head (rolls 1 pureGen ))
-            -- coloredboard = map addRandNum initboard -- [(i,j,c) | (i,j) <- initboard, c <- initcolors]  -- [(x, y, color)]
             coloredboard = putToghther initboard initcolors
 
 
@@ -360,7 +331,9 @@ initBoard pureGen blockNum = formboard coloredboard
 
 updateWorld :: Int -> Float -> World -> World
 updateWorld _ _ world
-     | mouseEnter world == True  =  world { score = newScore, board = newBoard, stack = newStack, status = newStatus, mouseEnter = False, mouseGridPos = newmouseGridPos}
+     | mouseEnter world == True  = 
+        world { score = newScore, board = newBoard, stack = newStack,
+         status = newStatus, mouseEnter = False, mouseGridPos = newmouseGridPos}
      | otherwise = world
        where
           mouseScreenPos = wMousePos world
@@ -368,9 +341,11 @@ updateWorld _ _ world
           deletePos = newmouseGridPos  -- mouseGridPos
           foundColor = findColor deletePos  (board world )
           newStack = if length (content (stack world )) == 7 then Stack True [] False
-                     else if (eliminate (stack world)) || (foundColor == 100) then Stack False (content (stack world )) False
+                     else if (eliminate (stack world)) || (foundColor == 100)
+                        then Stack False (content (stack world )) False
                      else Stack False (addItem foundColor (content (stack world ))) False
-          newStatus = if score world == (blockNumber * blockNumber * layers - 3) && (eliminate (stack world)) then 2 else if full newStack || status world == 1  then  1 else 0
+          newStatus = if score world == (blockNumber * blockNumber * layers - 3) && (eliminate (stack world)) 
+            then 2 else if full newStack || status world == 1  then  1 else 0
           newBoard = deleteItem deletePos (board world )
           newScore = if (eliminate (stack world)) then (score world) + 3 else (score world)
 
@@ -390,12 +365,12 @@ loadpictures = parallel $ map picIO filepaths
 main :: IO ()
 main = do
   ran <- Random.getStdGen
-  pics <- loadpictures
+  loadedpics <- loadpictures
   play --FullScreen
    (InWindow "TLE" (1400, 1000) (10, 10)) 
     backgroundColor
     9
-    (World (0,0) (0,0) initstack initboard 0 ran 0 "" False False pics)
+    (World (0,0) (0,0) initstack initboard 0 ran 0 "" False False loadedpics)
     (drawWorld 0)
     handleEvent  -- update world 
     (updateWorld 0)

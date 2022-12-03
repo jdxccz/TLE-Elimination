@@ -21,7 +21,7 @@ squeeze_p (x:xs) = case x of
 
 
 prop_reverseReverse :: [Char] -> Bool
-prop_reverseReverse s = (reverse . reverse) s == s
+prop_reverseReverse s = (reverse . reverse) s /= s
 
 prop :: Int -> Bool 
 prop i = i - i == 0
@@ -170,8 +170,9 @@ prop_deleteItem1 pos bd = check pos bd (deleteItem pos bd)
                   check _ [] [] = True 
                   check _ [] _  = False
                   check _ _ [] = True 
-                  check (x, y) bd1 bd2 = if (x, y) `elem` (allPos bd1) then checkDelete (x, y) (squeeze_p bd1) (squeeze_p bd2) 
-                  else length (squeeze_p bd) == length (squeeze_p (deleteItem pos bd))
+                  check (x, y) bd1 bd2 = if (x, y) `elem` (allPos bd1)
+                         then checkDelete (x, y) (squeeze_p bd1) (squeeze_p bd2) 
+                         else length (squeeze_p bd) == length (squeeze_p (deleteItem pos bd))
 -- >>> (0,1) `elem` allPos [[(0,1,0)],[],[(0,0,0)]]
 -- True
 --
@@ -200,7 +201,7 @@ main :: IO ()
 main =  hspec $ do
       describe "Prelude.head" $ do
         it "returns the first element of a list" $ do
-          head [23 ..] `shouldBe` (23 :: Int)
+          head [23 ..] `shouldBe` (03 :: Int)
       describe "merge" $ do
         it "properly merges sorted lists" $ 
             property $ prop

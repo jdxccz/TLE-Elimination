@@ -1,16 +1,8 @@
 module Funcs where
 import Graphics.Gloss
-import qualified Data.Set as Set
-import Data.Set (Set)
-import qualified Data.Set.Extra as Set
-import Data.List as L
-import Graphics.Gloss.Interface.Pure.Game
 import System.Random
 import qualified System.Random as Random
-import Graphics.Gloss.Juicy
-import System.Random (Random(..), newStdGen)
 import System.Random.Shuffle (shuffle')
-import Control.Concurrent.ParallelIO.Global
 import Test.QuickCheck
 
 type Coord = (Int, Int, Int)
@@ -35,7 +27,7 @@ type MBoard = [[Coord]]
 -- the next block to be move from board to stack 
 type ToMove =  Coord
 
-data World = World { -- nextMove :: ToMove
+data World = World { 
                      wMousePos:: Point
                    , mouseGridPos:: (Int, Int)
                    , stack :: Stack
@@ -151,18 +143,18 @@ putOnBoard :: (Int, Int) -> Int -> MBoard -> MBoard
 putOnBoard _ 100 b = b
 putOnBoard _ _ [] = []
 putOnBoard pos c (boardelement:theboard) = case boardelement of 
-                                    [] -> putOnBoard pos c theboard
-                                    _  -> if pos /= (x,y) 
-                                            then 
-                                              boardelement:(putOnBoard pos c theboard)  -- put to the next position 
-                                            else if (z == 100) 
-                                              then 
-                                                [(x,y,c)]:theboard 
-                                              else 
-                                                ((x,y,c):boardelement):theboard
-                                            where (x,y,z) = boardelement !! 0 
-                                            -- TODO what if board == [[]]
-                                            -- What is the structure of MBoard
+                            [] -> putOnBoard pos c theboard
+                            _  -> if pos /= (x,y) 
+                                    then 
+                                      boardelement:(putOnBoard pos c theboard)  -- put to the next position 
+                                    else if (z == 100) 
+                                      then 
+                                        [(x,y,c)]:theboard 
+                                      else 
+                                        ((x,y,c):boardelement):theboard
+                                    where (x,y,z) = boardelement !! 0 
+                                    -- TODO what if board == [[]]
+                                    -- What is the structure of MBoard
 
 -- >>> putOnBoard (0,0) 0 [[(0,1,0)],[],[(0,0,0)]]
 -- [[(0,1,0)],[(0,0,0),(0,0,0)]]
