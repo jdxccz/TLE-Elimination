@@ -305,6 +305,9 @@ onMouseDown g = case validPlacementCoord mouseGridPos (getFirst (board g)) && (f
 -- validPlacementCoord pos [] = False
 -- validPlacementCoord pos ((x, y, z):board) = if pos == (x, y) then True else validPlacementCoord pos board
 
+
+-- TODO if need to change board size, should change blockNumber and (i,j) into (i+shift, j+shift)
+  
 initBoard :: Random.StdGen -> Int -> MBoard
 initBoard pureGen blockNum = formboard coloredboard
       where initboard0 = [(i,j) | i <- [1.. blockNum], j <- [1.. blockNum]]
@@ -382,8 +385,6 @@ main = do
 
 window :: Display
 window = InWindow "try" (500, 500) (10, 10)
-
-
 
 -- main :: IO ()
 -- main = do 
