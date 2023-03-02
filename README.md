@@ -1,5 +1,13 @@
-# TLE Elimination Project (11.23 Updates)
+# TLE Elimination Project
 
+## Contribution
+Hansong Chen: build Stack logic, build win logic, calculate scores, improve Stack display 
+
+Xingkai Zheng: build multi-layer of the Board, build Revoke logic, build Shuffle logic, build and refine Stack logic
+
+Hui Zhi: design model architecture, Co-build the program structure and backbone, design and refine UI
+
+Xuechun Li: Co-build the program structure and backbone, build user input handler, and click-move logic
 
 In this project, we will build an arcade game named TLE Elimination. 
 
@@ -91,14 +99,3 @@ Get input from the user and use the input to update the board and container, and
 
 ### Changes to Goals: 
 Since searching for the winning solution of this game will require an enumeration of all the possible movement strategies, and the search space is exponential of the data volume, we decided not to check whether a certain board can be successfully eliminated. 
-
-
-
-## Contribution
-Hansong Chen: build Stack logic, build win logic, calculate scores, improve Stack display 
-
-Xingkai Zheng: build multi-layer of the Board, build Revoke logic, build Shuffle logic, build and refine Stack logic
-
-Hui Zhi: design model architecture, Co-build the program structure and backbone, design and refine UI
-
-Xuechun Li: Co-build the program structure and backbone, build user input handler, and click-move logic
