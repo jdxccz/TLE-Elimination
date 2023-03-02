@@ -3,13 +3,13 @@
 In this project, we will build an arcade game named TLE Elimination. 
 
 ## Contribution
-Hansong Chen: build Stack logic, build win logic, calculate scores, improve Stack display 
+*Hansong Chen*: build Stack logic, build win logic, calculate scores, improve Stack display 
 
-Xingkai Zheng: build multi-layer of the Board, build Revoke logic, build Shuffle logic, build and refine Stack logic
+*Xingkai Zheng*: build multi-layer of the Board, build Revoke logic, build Shuffle logic, build and refine Stack logic
 
-Hui Zhi: design model architecture, Co-build the program structure and backbone, design and refine UI
+*Hui Zhi*: design model architecture, Co-build the program structure and backbone, design and refine UI
 
-Xuechun Li: Co-build the program structure and backbone, build user input handler, and click-move logic
+*Xuechun Li*: Co-build the program structure and backbone, build user input handler, and click-move logic
 
 ## Game Set Up: 
 The program will initialize a game board with the size of M*N. At the start of the game, the program will fill in the board with multiple layers of pictures on each entry. The player will have an empty container with a size S.  
