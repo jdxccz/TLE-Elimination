@@ -5,7 +5,7 @@ In this project, we will build an arcade game named TLE Elimination.
 ## Contribution
 **Hansong Chen**: build Stack logic, build win logic, calculate scores, improve Stack display 
 
-**Xingkai Zheng**: build multi-layer of the Board, build Revoke logic, build Shuffle logic, build and refine Stack logic
+**Xingkai Zheng(jdxccz)**: build multi-layer of the Board, build Revoke logic, build Shuffle logic, build and refine Stack logic
 
 **Hui Zhi**: design model architecture, Co-build the program structure and backbone, design and refine UI
 
